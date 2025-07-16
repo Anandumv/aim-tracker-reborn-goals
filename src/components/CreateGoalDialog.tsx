@@ -27,13 +27,12 @@ const durations = [
 export function CreateGoalDialog({ onCreateGoal, children }: CreateGoalDialogProps) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("");
   const [duration, setDuration] = useState(30);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!title.trim() || !category) {
+    if (!title.trim()) {
       return;
     }
 
@@ -42,7 +41,7 @@ export function CreateGoalDialog({ onCreateGoal, children }: CreateGoalDialogPro
 
     onCreateGoal({
       title: title.trim(),
-      category,
+      category: "🎯 Personal",
       frequency: 'daily',
       startDate,
       endDate,
@@ -54,7 +53,6 @@ export function CreateGoalDialog({ onCreateGoal, children }: CreateGoalDialogPro
 
     // Reset form
     setTitle("");
-    setCategory("");
     setDuration(30);
     setOpen(false);
   };
@@ -74,92 +72,69 @@ export function CreateGoalDialog({ onCreateGoal, children }: CreateGoalDialogPro
         )}
       </DialogTrigger>
       
-      <DialogContent className="sm:max-w-[500px] border-0 bg-card/98 backdrop-blur-sm rounded-3xl">
-         <DialogHeader className="text-center space-y-4 pt-2">
-           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary rounded-2xl mx-auto">
-             <Target className="h-8 w-8 text-primary-foreground" />
-           </div>
-           <DialogTitle className="text-3xl font-bold text-foreground">
-             Start New Quest
-           </DialogTitle>
-           <p className="text-muted-foreground">
-             Choose your challenge and set your commitment level!
-           </p>
-         </DialogHeader>
+      <DialogContent className="sm:max-w-[400px] border-0 bg-card/98 backdrop-blur-sm rounded-3xl">
+        <DialogHeader className="text-center space-y-4 pt-2">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary rounded-2xl mx-auto">
+            <Target className="h-8 w-8 text-primary-foreground" />
+          </div>
+          <DialogTitle className="text-2xl font-bold text-foreground">
+            New Quest
+          </DialogTitle>
+        </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 mt-8">
+        <form onSubmit={handleSubmit} className="space-y-6 mt-6">
           {/* Goal Title */}
-          <div className="space-y-3">
-             <Label htmlFor="title" className="text-base font-semibold text-foreground">
-               What's your quest?
-             </Label>
+          <div className="space-y-2">
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Exercise for 30 minutes every day"
-              className="border-0 bg-muted/50 text-lg h-14 rounded-2xl px-6"
+              placeholder="What do you want to achieve?"
+              className="border-0 bg-muted/50 text-lg h-14 rounded-2xl px-6 text-center"
               required
             />
           </div>
 
-          {/* Category */}
-          <div className="space-y-3">
-            <Label htmlFor="category" className="text-base font-semibold text-foreground">
-              Category
-            </Label>
-            <Select value={category} onValueChange={setCategory} required>
-              <SelectTrigger className="border-0 bg-muted/50 h-14 rounded-2xl px-6">
-                <SelectValue placeholder="Choose a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Duration */}
-          <div className="space-y-3">
-            <Label className="text-base font-semibold text-foreground">
-              Duration
-            </Label>
-            <div className="grid grid-cols-3 gap-3">
-              {durations.map((dur) => (
-                <Button
-                  key={dur.days}
-                  type="button"
-                  variant={duration === dur.days ? "default" : "outline"}
-                  className="h-12 rounded-xl text-sm"
-                  onClick={() => setDuration(dur.days)}
-                >
-                  {dur.label}
-                </Button>
-              ))}
+          {/* Quick Duration */}
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                type="button"
+                variant={duration === 7 ? "default" : "outline"}
+                className="h-12 rounded-xl"
+                onClick={() => setDuration(7)}
+              >
+                1 Week
+              </Button>
+              <Button
+                type="button"
+                variant={duration === 30 ? "default" : "outline"}
+                className="h-12 rounded-xl"
+                onClick={() => setDuration(30)}
+              >
+                30 Days
+              </Button>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4 pt-6">
+          <div className="flex gap-3 pt-4">
             <Button
               type="button"
               variant="ghost"
               onClick={() => setOpen(false)}
-              className="flex-1 h-14 rounded-2xl text-base"
+              className="flex-1 h-12 rounded-2xl"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               variant="default"
-               className="flex-1 h-14 rounded-2xl text-base font-semibold shadow-glow"
-               disabled={!title.trim() || !category}
-             >
-               Start Quest
-             </Button>
+              className="flex-1 h-12 rounded-2xl font-semibold shadow-glow"
+              disabled={!title.trim()}
+            >
+              Start Quest
+            </Button>
           </div>
         </form>
       </DialogContent>
