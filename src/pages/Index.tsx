@@ -57,64 +57,87 @@ const Index = () => {
     // Update goal to completed
     await updateGoal(goalId, { status: 'completed' });
     
-    // Show epic completion alert
+    // Epic completion sequence
     toast({
-      title: "🎉 QUEST COMPLETED!",
-      description: `Amazing work! You've conquered "${goal.title}" and earned epic rewards!`,
-      duration: 5000,
+      title: "🎉 LEGENDARY VICTORY!",
+      description: `You've conquered "${goal.title}" like a true champion!`,
+      duration: 4000,
     });
 
-    // Add some celebratory XP
+    // Delayed XP bonus notification
     setTimeout(() => {
       toast({
-        title: "⚡ +100 XP BONUS!",
-        description: "Quest completion bonus earned!",
+        title: "⚡ +100 XP EARNED!",
+        description: "Epic quest completion bonus! You're unstoppable!",
         duration: 3000,
       });
     }, 1000);
+
+    // Level up check
+    setTimeout(() => {
+      if (user && (user.xp + 100) >= user.level * 250) {
+        toast({
+          title: "🚀 LEVEL UP!",
+          description: `Congratulations! You've reached Level ${user.level + 1}!`,
+          duration: 4000,
+        });
+      }
+    }, 2000);
   };
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-3xl mx-auto px-4 py-6">
-        {/* Player Info */}
+        {/* Enhanced Player Info */}
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-4">
-            <Avatar className="h-14 w-14 ring-2 ring-primary/20">
-              <AvatarFallback className="bg-gradient-primary text-primary-foreground text-lg">
-                {user?.avatar || user?.username?.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="h-16 w-16 ring-4 ring-primary/30 shadow-glow">
+                <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xl font-bold">
+                  {user?.avatar || user?.username?.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              {/* Level indicator */}
+              <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground shadow-glow">
+                {user?.level}
+              </div>
+            </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">{user?.username}</h1>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1">
+              <h1 className="text-3xl font-bold gradient-text mb-1">{user?.username}</h1>
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-1 px-3 py-1 bg-primary/20 rounded-full">
                   <Crown className="h-4 w-4 text-primary" />
-                  Level {user?.level}
-                </span>
-                <span className="flex items-center gap-1">
+                  <span className="text-primary font-medium">Level {user?.level}</span>
+                </div>
+                <div className="flex items-center gap-1 px-3 py-1 bg-primary/20 rounded-full">
                   <Zap className="h-4 w-4 text-primary" />
-                  {user?.xp} XP
-                </span>
-                <span className="flex items-center gap-1">
+                  <span className="text-primary font-medium">{user?.xp} XP</span>
+                </div>
+                <div className="flex items-center gap-1 px-3 py-1 bg-primary/20 rounded-full">
                   <Flame className="h-4 w-4 text-primary" />
-                  {user?.currentStreak} streak
-                </span>
+                  <span className="text-primary font-medium">{user?.currentStreak}</span>
+                </div>
               </div>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={() => signOut()}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => signOut()}
+            className="hover:bg-destructive/20 hover:text-destructive hover:border-destructive/50 transition-all duration-200"
+          >
             <LogOut className="h-4 w-4 mr-2" />
-            Exit
+            Exit Game
           </Button>
         </div>
 
-        {/* New Quest Button */}
+        {/* Enhanced New Quest Button */}
         <div className="mb-8">
           <CreateGoalDialog onCreateGoal={createGoal}>
-            <Button size="lg" className="w-full h-16 text-lg font-semibold rounded-2xl bg-gradient-primary hover:shadow-glow transition-all duration-200">
-              <Target className="h-6 w-6 mr-3" />
-              Start New Quest
+            <Button size="lg" className="w-full h-20 text-xl font-bold rounded-3xl bg-gradient-primary hover:shadow-glow hover:scale-105 transition-all duration-300 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              <Target className="h-8 w-8 mr-4 animate-pulse" />
+              <span className="relative z-10">Start Epic Quest</span>
             </Button>
           </CreateGoalDialog>
         </div>
