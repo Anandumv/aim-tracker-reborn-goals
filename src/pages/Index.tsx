@@ -34,7 +34,7 @@ const Index = () => {
     if (user && goals.length === 0) {
       toast({
         title: "🎯 Welcome to Commit!",
-        description: "Ready to put your money where your goals are? Create your first goal and stake some money!",
+        description: "Ready to start tracking your goals? Create your first goal and build consistent habits!",
         duration: 5000,
       });
     }
@@ -72,10 +72,9 @@ const Index = () => {
         duration: 3000,
       });
     } else {
-      const goal = goals.find(g => g.id === goalId);
       toast({
-        title: "😞 Money burned!",
-        description: `₹${goal?.wagerAmount} has been deducted from your wallet. Get back on track tomorrow!`,
+        title: "😞 Missed today!",
+        description: "Don't worry, you can get back on track tomorrow!",
         variant: "destructive",
         duration: 4000,
       });
@@ -99,13 +98,13 @@ const Index = () => {
             </h1>
             
             <p className="text-xl text-muted-foreground mb-6">
-              Put Your Money Where Your Goals Are
+              Track Your Goals and Build Habits
             </p>
             
             <div className="max-w-2xl mx-auto text-center">
               <p className="text-base text-muted-foreground leading-relaxed">
-                Set meaningful goals, stake real money, join accountability squads, and earn rewards for success. 
-                Fail and your money goes to the community pot. Succeed and earn XP, coins, and respect.
+                Set meaningful goals, track your progress, join accountability squads, and earn rewards for success. 
+                Build consistent habits and celebrate your wins!
               </p>
             </div>
           </div>
@@ -242,7 +241,7 @@ const Index = () => {
                     </h2>
                     
                     <p className="text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
-                      Turn your goals into serious commitments. Stake real money, join squads, 
+                      Turn your goals into serious commitments. Track your progress, join squads, 
                       and watch your motivation skyrocket!
                     </p>
                   </div>
@@ -253,7 +252,7 @@ const Index = () => {
                         <Target className="h-8 w-8 text-primary" />
                       </div>
                       <h3 className="font-semibold text-foreground">Set Goals</h3>
-                      <p className="text-sm text-muted-foreground">Choose what matters and stake money on it</p>
+                      <p className="text-sm text-muted-foreground">Choose what matters and track your progress</p>
                     </div>
                     
                     <div className="text-center space-y-3">
@@ -269,7 +268,7 @@ const Index = () => {
                         <Trophy className="h-8 w-8 text-primary" />
                       </div>
                       <h3 className="font-semibold text-foreground">Earn Rewards</h3>
-                      <p className="text-sm text-muted-foreground">Win XP, coins, and pot money</p>
+                      <p className="text-sm text-muted-foreground">Win XP, level up, and celebrate success</p>
                     </div>
                   </div>
 

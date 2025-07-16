@@ -10,7 +10,6 @@ import {
   Clock, 
   CheckCircle, 
   X,
-  DollarSign,
   Zap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -64,11 +63,6 @@ export function AccountabilityGoalCard({ goal, onCheckIn }: GoalCardProps) {
               <Badge variant="secondary" className="text-sm font-medium px-3 py-1 rounded-full bg-primary-light text-primary">
                 {goal.category}
               </Badge>
-              
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <DollarSign className="h-4 w-4" />
-                {goal.currency}{goal.wagerAmount}
-              </div>
 
               {goal.privacy === 'squad' && (
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -117,10 +111,8 @@ export function AccountabilityGoalCard({ goal, onCheckIn }: GoalCardProps) {
               <div className="text-xs text-muted-foreground">Check-ins</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-destructive">
-                {goal.currency}{goal.totalBurned}
-              </div>
-              <div className="text-xs text-muted-foreground">Burned</div>
+              <div className="text-2xl font-bold text-destructive">{goal.missedCheckIns}</div>
+              <div className="text-xs text-muted-foreground">Missed</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-success">{goal.xpEarned}</div>
@@ -159,10 +151,6 @@ export function AccountabilityGoalCard({ goal, onCheckIn }: GoalCardProps) {
                       <X className="h-5 w-5 mr-2" />
                       No 😞
                     </Button>
-                  </div>
-                  
-                  <div className="text-xs text-center text-destructive">
-                    ⚠️ Saying "No" will burn {goal.currency}{goal.wagerAmount} from your wallet
                   </div>
                 </div>
               )}

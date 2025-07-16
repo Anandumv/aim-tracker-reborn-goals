@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Target, DollarSign } from "lucide-react";
+import { Plus, Target } from "lucide-react";
 import { Goal } from "@/types";
 
 interface CreateGoalDialogProps {
@@ -23,15 +23,11 @@ const durations = [
   { label: "90 Days", days: 90 }
 ];
 
-const wagerAmounts = [50, 100, 200, 500, 1000];
-
 export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [duration, setDuration] = useState(30);
-  const [wagerAmount, setWagerAmount] = useState(100);
-  const [customWager, setCustomWager] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +36,6 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
       return;
     }
 
-    const finalWager = customWager ? parseInt(customWager) : wagerAmount;
     const startDate = new Date();
     const endDate = new Date(startDate.getTime() + duration * 24 * 60 * 60 * 1000);
 
@@ -50,8 +45,8 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
       frequency: 'daily',
       startDate,
       endDate,
-      wagerAmount: finalWager,
-      currency: '₹',
+      wagerAmount: 0,
+      currency: '',
       privacy: 'solo',
       status: 'active'
     });
@@ -60,8 +55,6 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
     setTitle("");
     setCategory("");
     setDuration(30);
-    setWagerAmount(100);
-    setCustomWager("");
     setOpen(false);
   };
 
@@ -74,7 +67,7 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
           className="rounded-2xl px-10 py-6 text-lg font-semibold shadow-glow hover:shadow-glow hover:scale-105 transition-all duration-200"
         >
           <Plus className="h-6 w-6 mr-3" />
-          Create Goal & Stake Money
+          Create Goal
         </Button>
       </DialogTrigger>
       
@@ -87,7 +80,7 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
             Create Your Goal
           </DialogTitle>
           <p className="text-muted-foreground">
-            Set your goal, pick a duration, and stake money to stay committed!
+            Set your goal and pick a duration to stay committed!
           </p>
         </DialogHeader>
 
@@ -146,40 +139,6 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
             </div>
           </div>
 
-          {/* Wager Amount */}
-          <div className="space-y-3">
-            <Label className="text-base font-semibold text-foreground flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              Money at Stake (per missed day)
-            </Label>
-            <div className="grid grid-cols-3 gap-3 mb-3">
-              {wagerAmounts.map((amount) => (
-                <Button
-                  key={amount}
-                  type="button"
-                  variant={wagerAmount === amount && !customWager ? "default" : "outline"}
-                  className="h-12 rounded-xl"
-                  onClick={() => {
-                    setWagerAmount(amount);
-                    setCustomWager("");
-                  }}
-                >
-                  ₹{amount}
-                </Button>
-              ))}
-            </div>
-            <Input
-              type="number"
-              placeholder="Custom amount (optional)"
-              value={customWager}
-              onChange={(e) => setCustomWager(e.target.value)}
-              className="border-0 bg-muted/50 h-12 rounded-2xl px-6"
-            />
-            <p className="text-xs text-destructive text-center">
-              ⚠️ This amount will be deducted from your wallet for each missed day
-            </p>
-          </div>
-
           {/* Action Buttons */}
           <div className="flex gap-4 pt-6">
             <Button
@@ -196,7 +155,7 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
               className="flex-1 h-14 rounded-2xl text-base font-semibold shadow-glow"
               disabled={!title.trim() || !category}
             >
-              Stake ₹{customWager || wagerAmount} & Start!
+              Create Goal
             </Button>
           </div>
         </form>

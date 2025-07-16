@@ -16,11 +16,11 @@ import { useGame } from "@/contexts/GameContext";
 import { useToast } from "@/hooks/use-toast";
 
 export function GameStats() {
-  const { user, wallet, getStats } = useGame();
+  const { user, getStats } = useGame();
   const { toast } = useToast();
   const stats = getStats();
 
-  if (!user || !wallet) return null;
+  if (!user) return null;
 
   const levelProgress = (user.xp % 250) / 250 * 100; // 250 XP per level
 
@@ -110,65 +110,6 @@ export function GameStats() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Wallet Card */}
-      <Card className="border-0 bg-card/80 backdrop-blur-sm rounded-3xl">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary-light rounded-lg flex items-center justify-center">
-              💰
-            </div>
-            Wallet
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div>
-                <div className="text-3xl font-bold text-primary">
-                  {wallet.currency}{wallet.balance}
-                </div>
-                <div className="text-sm text-muted-foreground">Available Balance</div>
-              </div>
-              
-              <Button 
-                className="w-full rounded-2xl font-semibold" 
-                size="lg"
-                onClick={() => toast({
-                  title: "Coming Soon! 💳",
-                  description: "Payment integration is being developed. Stay tuned!",
-                  duration: 3000,
-                })}
-              >
-                💳 Add Money
-              </Button>
-            </div>
-            
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Total Earned</span>
-                <span className="font-semibold text-success">
-                  +{wallet.currency}{wallet.totalEarned}
-                </span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Total Burned</span>
-                <span className="font-semibold text-destructive">
-                  -{wallet.currency}{wallet.totalBurned}
-                </span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Deposited</span>
-                <span className="font-semibold text-foreground">
-                  {wallet.currency}{wallet.totalDeposited}
-                </span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-4">

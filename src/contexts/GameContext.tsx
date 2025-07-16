@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext } from 'react';
-import { User, Goal, Squad, CheckIn, Wallet, UserAchievement } from '@/types';
+import { User, Goal, Squad, CheckIn, UserAchievement } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -8,7 +8,6 @@ interface GameState {
   user: User | null;
   goals: Goal[];
   squads: Squad[];
-  wallet: Wallet | null;
   achievements: UserAchievement[];
   dailyCheckIns: CheckIn[];
   loading: boolean;
@@ -33,9 +32,6 @@ interface GameContextType extends GameState {
   joinSquad: (squadCode: string) => void;
   leaveSquad: (squadId: string) => void;
   
-  // Wallet actions
-  updateWallet: (updates: Partial<Wallet>) => void;
-  
   // Stats
   getStats: () => {
     totalGoals: number;
@@ -43,7 +39,6 @@ interface GameContextType extends GameState {
     completedGoals: number;
     currentStreak: number;
     weeklyXP: number;
-    totalEarned: number;
     successRate: number;
   };
 }
@@ -81,30 +76,6 @@ const fetchUserProfile = async (userId: string): Promise<User | null> => {
   };
 };
 
-const fetchUserWallet = async (userId: string): Promise<Wallet | null> => {
-  const { data, error } = await supabase
-    .from('wallets')
-    .select('*')
-    .eq('user_id', userId)
-    .single();
-
-  if (error) {
-    console.error('Error fetching wallet:', error);
-    return null;
-  }
-
-  return {
-    id: data.id,
-    userId: data.user_id,
-    balance: data.balance,
-    currency: data.currency,
-    totalDeposited: data.total_deposited,
-    totalWithdrawn: data.total_withdrawn,
-    totalBurned: data.total_burned,
-    totalEarned: data.total_earned,
-    updatedAt: new Date(data.updated_at)
-  };
-};
 
 const fetchUserGoals = async (userId: string): Promise<Goal[]> => {
   const { data, error } = await supabase
@@ -176,7 +147,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     user: null,
     goals: [],
     squads: [],
-    wallet: null,
     achievements: [],
     dailyCheckIns: [],
     loading: true
@@ -194,7 +164,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         user: null,
         goals: [],
         squads: [],
-        wallet: null,
         achievements: [],
         dailyCheckIns: [],
         loading: false
@@ -204,9 +173,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const loadUserData = async (userId: string, email: string) => {
     try {
-      const [profile, wallet, goals, checkIns] = await Promise.all([
+      const [profile, goals, checkIns] = await Promise.all([
         fetchUserProfile(userId),
-        fetchUserWallet(userId),
         fetchUserGoals(userId),
         fetchUserCheckIns(userId)
       ]);
@@ -215,7 +183,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         user: profile ? { ...profile, email } : null,
         goals,
         squads: [], // TODO: Implement squad loading
-        wallet,
         achievements: [], // TODO: Implement achievement loading
         dailyCheckIns: checkIns,
         loading: false
@@ -441,7 +408,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     const today = new Date();
     const xpEarned = success ? 25 : 0;
-    const amountBurned = success ? 0 : goal.wagerAmount;
     
     try {
       // Create check-in record
@@ -454,7 +420,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           success,
           notes,
           xp_earned: xpEarned,
-          amount_burned: amountBurned
+          amount_burned: 0
         });
 
       if (checkInError) throw checkInError;
@@ -465,7 +431,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         totalCheckIns: goal.totalCheckIns + 1,
         currentStreak: success ? goal.currentStreak + 1 : 0,
         missedCheckIns: success ? goal.missedCheckIns : goal.missedCheckIns + 1,
-        totalBurned: goal.totalBurned + amountBurned,
+        totalBurned: goal.totalBurned,
         xpEarned: goal.xpEarned + xpEarned
       };
 
@@ -480,7 +446,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         success,
         notes,
         xpEarned,
-        amountBurned,
+        amountBurned: 0,
         createdAt: new Date()
       };
 
@@ -498,13 +464,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         });
       } else {
         updateUser({ currentStreak: 0 });
-        // Update wallet (burn money)
-        if (state.wallet) {
-          updateWallet({
-            balance: state.wallet.balance - amountBurned,
-            totalBurned: state.wallet.totalBurned + amountBurned
-          });
-        }
       }
     } catch (error) {
       console.error('Error performing check-in:', error);
@@ -556,38 +515,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  const updateWallet = async (updates: Partial<Wallet>) => {
-    if (!authUser || !state.wallet) return;
-
-    try {
-      const { error } = await supabase
-        .from('wallets')
-        .update({
-          balance: updates.balance,
-          currency: updates.currency,
-          total_deposited: updates.totalDeposited,
-          total_withdrawn: updates.totalWithdrawn,
-          total_burned: updates.totalBurned,
-          total_earned: updates.totalEarned
-        })
-        .eq('user_id', authUser.id);
-
-      if (error) throw error;
-
-      setState(prev => ({
-        ...prev,
-        wallet: prev.wallet ? { ...prev.wallet, ...updates, updatedAt: new Date() } : null
-      }));
-    } catch (error) {
-      console.error('Error updating wallet:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update wallet",
-        variant: "destructive"
-      });
-    }
-  };
-
   const getStats = () => {
     const activeGoals = state.goals.filter(g => g.status === 'active').length;
     const completedGoals = state.goals.filter(g => g.status === 'completed').length;
@@ -607,7 +534,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       completedGoals,
       currentStreak: state.user?.currentStreak || 0,
       weeklyXP,
-      totalEarned: state.wallet?.totalEarned || 0,
       successRate
     };
   };
@@ -624,7 +550,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     createSquad,
     joinSquad,
     leaveSquad,
-    updateWallet,
     getStats
   };
 
