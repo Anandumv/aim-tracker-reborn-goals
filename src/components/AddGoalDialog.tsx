@@ -5,11 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Plus } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { Plus } from "lucide-react";
 
 interface Goal {
   id: string;
@@ -29,37 +25,20 @@ interface AddGoalDialogProps {
 }
 
 const categories = [
-  "Health & Fitness",
-  "Learning",
-  "Career",
-  "Personal",
-  "Finance",
-  "Relationships",
-  "Hobbies",
-  "Travel"
+  "Health", "Learning", "Career", "Personal", "Finance", "Lifestyle"
 ];
 
 const units = [
-  "times",
-  "hours",
-  "days", 
-  "minutes",
-  "pages",
-  "kg",
-  "miles",
-  "km",
-  "exercises",
-  "lessons"
+  "times", "hours", "days", "minutes", "pages", "exercises", "lessons"
 ];
 
 export function AddGoalDialog({ onAddGoal }: AddGoalDialogProps) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [targetValue, setTargetValue] = useState<number>(1);
+  const [targetValue, setTargetValue] = useState<number>(10);
   const [unit, setUnit] = useState("times");
   const [category, setCategory] = useState("");
-  const [deadline, setDeadline] = useState<Date>();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,68 +52,53 @@ export function AddGoalDialog({ onAddGoal }: AddGoalDialogProps) {
       description: description.trim() || undefined,
       targetValue,
       unit,
-      category,
-      deadline
+      category
     });
 
     // Reset form
     setTitle("");
     setDescription("");
-    setTargetValue(1);
+    setTargetValue(10);
     setUnit("times");
     setCategory("");
-    setDeadline(undefined);
     setOpen(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="gradient" size="lg" className="shadow-glow">
-          <Plus className="h-5 w-5" />
-          Add New Goal
+        <Button variant="default" size="lg" className="rounded-full px-8">
+          <Plus className="h-5 w-5 mr-2" />
+          New Goal
         </Button>
       </DialogTrigger>
       
-      <DialogContent className="sm:max-w-[500px] bg-card border-muted/20">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold bg-gradient-primary bg-clip-text text-transparent">
-            Create New Goal
+      <DialogContent className="sm:max-w-[480px] border-0 bg-card/95 backdrop-blur-sm">
+        <DialogHeader className="text-center space-y-3">
+          <DialogTitle className="text-2xl font-bold text-foreground">
+            Create Goal
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 mt-6">
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-sm font-medium">
-              Goal Title *
+            <Label htmlFor="title" className="text-sm font-medium text-foreground">
+              What's your goal?
             </Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Read 30 books this year"
-              className="bg-muted/20 border-muted/40"
+              placeholder="e.g., Read books, Exercise, Learn coding..."
+              className="border-0 bg-muted/50 text-base h-12"
               required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-medium">
-              Description
-            </Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Add more details about your goal..."
-              className="bg-muted/20 border-muted/40 min-h-[80px]"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="target" className="text-sm font-medium">
-                Target Value *
+              <Label htmlFor="target" className="text-sm font-medium text-foreground">
+                Target
               </Label>
               <Input
                 id="target"
@@ -142,17 +106,17 @@ export function AddGoalDialog({ onAddGoal }: AddGoalDialogProps) {
                 min="1"
                 value={targetValue}
                 onChange={(e) => setTargetValue(Number(e.target.value))}
-                className="bg-muted/20 border-muted/40"
+                className="border-0 bg-muted/50 h-12"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="unit" className="text-sm font-medium">
+              <Label htmlFor="unit" className="text-sm font-medium text-foreground">
                 Unit
               </Label>
               <Select value={unit} onValueChange={setUnit}>
-                <SelectTrigger className="bg-muted/20 border-muted/40">
+                <SelectTrigger className="border-0 bg-muted/50 h-12">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -167,12 +131,12 @@ export function AddGoalDialog({ onAddGoal }: AddGoalDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category" className="text-sm font-medium">
-              Category *
+            <Label htmlFor="category" className="text-sm font-medium text-foreground">
+              Category
             </Label>
             <Select value={category} onValueChange={setCategory} required>
-              <SelectTrigger className="bg-muted/20 border-muted/40">
-                <SelectValue placeholder="Select a category" />
+              <SelectTrigger className="border-0 bg-muted/50 h-12">
+                <SelectValue placeholder="Choose category" />
               </SelectTrigger>
               <SelectContent>
                 {categories.map((cat) => (
@@ -185,48 +149,31 @@ export function AddGoalDialog({ onAddGoal }: AddGoalDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-sm font-medium">
-              Deadline (Optional)
+            <Label htmlFor="description" className="text-sm font-medium text-foreground">
+              Notes (optional)
             </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal bg-muted/20 border-muted/40",
-                    !deadline && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {deadline ? format(deadline, "PPP") : "Pick a date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={deadline}
-                  onSelect={setDeadline}
-                  disabled={(date) => date < new Date()}
-                  initialFocus
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Any additional details..."
+              className="border-0 bg-muted/50 min-h-[80px] resize-none"
+            />
           </div>
 
           <div className="flex gap-3 pt-4">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={() => setOpen(false)}
-              className="flex-1"
+              className="flex-1 h-12"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              variant="gradient"
-              className="flex-1"
+              variant="default"
+              className="flex-1 h-12"
               disabled={!title.trim() || !category || targetValue <= 0}
             >
               Create Goal
