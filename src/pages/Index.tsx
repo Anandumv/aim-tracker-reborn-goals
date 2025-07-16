@@ -3,13 +3,15 @@ import { AccountabilityGoalCard } from "@/components/AccountabilityGoalCard";
 import { CreateGoalDialog } from "@/components/CreateGoalDialog";
 import { GameStats } from "@/components/GameStats";
 import { useGame } from "@/contexts/GameContext";
-import { Target, Flame, Trophy, Users, Zap, Search } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Target, Flame, Trophy, Users, Zap, Search, LogOut, Settings } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const Index = () => {
   const { 
@@ -21,6 +23,7 @@ const Index = () => {
     getStats
   } = useGame();
   
+  const { signOut } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
@@ -85,24 +88,45 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-primary rounded-3xl shadow-glow mb-8">
-            <Target className="h-10 w-10 text-primary-foreground" />
-          </div>
-          
-          <h1 className="text-5xl font-bold text-foreground mb-4">
-            Commit
-          </h1>
-          
-          <p className="text-xl text-muted-foreground mb-6">
-            Put Your Money Where Your Goals Are
-          </p>
-          
-          <div className="max-w-2xl mx-auto text-center">
-            <p className="text-base text-muted-foreground leading-relaxed">
-              Set meaningful goals, stake real money, join accountability squads, and earn rewards for success. 
-              Fail and your money goes to the community pot. Succeed and earn XP, coins, and respect.
+        <div className="flex justify-between items-start mb-12">
+          <div className="text-center flex-1">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-primary rounded-3xl shadow-glow mb-8">
+              <Target className="h-10 w-10 text-primary-foreground" />
+            </div>
+            
+            <h1 className="text-5xl font-bold text-foreground mb-4">
+              Commit
+            </h1>
+            
+            <p className="text-xl text-muted-foreground mb-6">
+              Put Your Money Where Your Goals Are
             </p>
+            
+            <div className="max-w-2xl mx-auto text-center">
+              <p className="text-base text-muted-foreground leading-relaxed">
+                Set meaningful goals, stake real money, join accountability squads, and earn rewards for success. 
+                Fail and your money goes to the community pot. Succeed and earn XP, coins, and respect.
+              </p>
+            </div>
+          </div>
+
+          {/* User Profile Section */}
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Welcome back,</p>
+              <p className="font-semibold text-foreground">{user?.username}</p>
+            </div>
+            <Avatar className="h-10 w-10">
+              <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+                {user?.avatar || '👤'}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => signOut()}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
 

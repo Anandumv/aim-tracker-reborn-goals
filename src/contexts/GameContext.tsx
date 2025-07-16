@@ -1,5 +1,8 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Goal, Squad, CheckIn, Wallet, UserAchievement } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 interface GameState {
   user: User | null;
@@ -47,46 +50,128 @@ interface GameContextType extends GameState {
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
-const STORAGE_KEYS = {
-  USER: 'commit_user',
-  GOALS: 'commit_goals',
-  SQUADS: 'commit_squads',
-  WALLET: 'commit_wallet',
-  ACHIEVEMENTS: 'commit_achievements',
-  CHECKINS: 'commit_checkins'
+// Database helper functions
+const fetchUserProfile = async (userId: string): Promise<User | null> => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+
+  if (error) {
+    console.error('Error fetching user profile:', error);
+    return null;
+  }
+
+  return {
+    id: data.user_id,
+    email: '', // Will be populated from auth
+    username: data.username,
+    avatar: data.avatar,
+    timezone: data.timezone,
+    xp: data.xp,
+    coins: data.coins,
+    level: data.level,
+    totalStaked: data.total_staked,
+    totalEarned: data.total_earned,
+    currentStreak: data.current_streak,
+    longestStreak: data.longest_streak,
+    createdAt: new Date(data.created_at),
+    lastActive: new Date(data.last_active)
+  };
 };
 
-// Mock user for demo
-const createMockUser = (): User => ({
-  id: 'user_1',
-  email: 'demo@commit.app',
-  username: 'demo_user',
-  avatar: '🎯',
-  timezone: 'Asia/Kolkata',
-  xp: 1250,
-  coins: 450,
-  level: 5,
-  totalStaked: 2500,
-  totalEarned: 750,
-  currentStreak: 7,
-  longestStreak: 15,
-  createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-  lastActive: new Date()
-});
+const fetchUserWallet = async (userId: string): Promise<Wallet | null> => {
+  const { data, error } = await supabase
+    .from('wallets')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
 
-const createMockWallet = (): Wallet => ({
-  id: 'wallet_1',
-  userId: 'user_1',
-  balance: 1500,
-  currency: '₹',
-  totalDeposited: 5000,
-  totalWithdrawn: 750,
-  totalBurned: 850,
-  totalEarned: 750,
-  updatedAt: new Date()
-});
+  if (error) {
+    console.error('Error fetching wallet:', error);
+    return null;
+  }
+
+  return {
+    id: data.id,
+    userId: data.user_id,
+    balance: data.balance,
+    currency: data.currency,
+    totalDeposited: data.total_deposited,
+    totalWithdrawn: data.total_withdrawn,
+    totalBurned: data.total_burned,
+    totalEarned: data.total_earned,
+    updatedAt: new Date(data.updated_at)
+  };
+};
+
+const fetchUserGoals = async (userId: string): Promise<Goal[]> => {
+  const { data, error } = await supabase
+    .from('goals')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching goals:', error);
+    return [];
+  }
+
+  return data.map(goal => ({
+    id: goal.id,
+    userId: goal.user_id,
+    title: goal.title,
+    description: goal.description,
+    category: goal.category,
+    frequency: goal.frequency,
+    customDays: goal.custom_days,
+    startDate: new Date(goal.start_date),
+    endDate: new Date(goal.end_date),
+    wagerAmount: goal.wager_amount,
+    currency: goal.currency,
+    privacy: goal.privacy,
+    squadId: goal.squad_id,
+    status: goal.status,
+    currentStreak: goal.current_streak,
+    totalCheckIns: goal.total_check_ins,
+    missedCheckIns: goal.missed_check_ins,
+    totalBurned: goal.total_burned,
+    xpEarned: goal.xp_earned,
+    createdAt: new Date(goal.created_at),
+    lastCheckIn: goal.last_check_in ? new Date(goal.last_check_in) : undefined
+  }));
+};
+
+const fetchUserCheckIns = async (userId: string): Promise<CheckIn[]> => {
+  const { data, error } = await supabase
+    .from('check_ins')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching check-ins:', error);
+    return [];
+  }
+
+  return data.map(checkIn => ({
+    id: checkIn.id,
+    goalId: checkIn.goal_id,
+    userId: checkIn.user_id,
+    date: new Date(checkIn.date),
+    success: checkIn.success,
+    notes: checkIn.notes,
+    xpEarned: checkIn.xp_earned,
+    amountBurned: checkIn.amount_burned,
+    createdAt: new Date(checkIn.created_at)
+  }));
+};
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
+  const { user: authUser, loading: authLoading } = useAuth();
+  const { toast } = useToast();
+  
   const [state, setState] = useState<GameState>({
     user: null,
     goals: [],
@@ -97,62 +182,85 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     loading: true
   });
 
-  // Load data from localStorage
+  // Load data from Supabase when user authenticates
   useEffect(() => {
-    const loadData = () => {
-      try {
-        const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
-        const storedGoals = localStorage.getItem(STORAGE_KEYS.GOALS);
-        const storedSquads = localStorage.getItem(STORAGE_KEYS.SQUADS);
-        const storedWallet = localStorage.getItem(STORAGE_KEYS.WALLET);
-        const storedAchievements = localStorage.getItem(STORAGE_KEYS.ACHIEVEMENTS);
-        const storedCheckIns = localStorage.getItem(STORAGE_KEYS.CHECKINS);
-
-        setState({
-          user: storedUser ? JSON.parse(storedUser) : createMockUser(),
-          goals: storedGoals ? JSON.parse(storedGoals).map((g: any) => ({
-            ...g,
-            startDate: new Date(g.startDate),
-            endDate: new Date(g.endDate),
-            createdAt: new Date(g.createdAt),
-            lastCheckIn: g.lastCheckIn ? new Date(g.lastCheckIn) : undefined
-          })) : [],
-          squads: storedSquads ? JSON.parse(storedSquads) : [],
-          wallet: storedWallet ? JSON.parse(storedWallet) : createMockWallet(),
-          achievements: storedAchievements ? JSON.parse(storedAchievements) : [],
-          dailyCheckIns: storedCheckIns ? JSON.parse(storedCheckIns).map((c: any) => ({
-            ...c,
-            date: new Date(c.date),
-            createdAt: new Date(c.createdAt)
-          })) : [],
-          loading: false
-        });
-      } catch (error) {
-        console.error('Failed to load data:', error);
-        setState(prev => ({ ...prev, loading: false }));
-      }
-    };
-
-    loadData();
-  }, []);
-
-  // Save data to localStorage whenever state changes
-  useEffect(() => {
-    if (!state.loading) {
-      if (state.user) localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(state.user));
-      localStorage.setItem(STORAGE_KEYS.GOALS, JSON.stringify(state.goals));
-      localStorage.setItem(STORAGE_KEYS.SQUADS, JSON.stringify(state.squads));
-      if (state.wallet) localStorage.setItem(STORAGE_KEYS.WALLET, JSON.stringify(state.wallet));
-      localStorage.setItem(STORAGE_KEYS.ACHIEVEMENTS, JSON.stringify(state.achievements));
-      localStorage.setItem(STORAGE_KEYS.CHECKINS, JSON.stringify(state.dailyCheckIns));
+    if (authLoading) return;
+    
+    if (authUser) {
+      loadUserData(authUser.id, authUser.email || '');
+    } else {
+      // User is not authenticated, clear state
+      setState({
+        user: null,
+        goals: [],
+        squads: [],
+        wallet: null,
+        achievements: [],
+        dailyCheckIns: [],
+        loading: false
+      });
     }
-  }, [state]);
+  }, [authUser, authLoading]);
 
-  const updateUser = (updates: Partial<User>) => {
-    setState(prev => ({
-      ...prev,
-      user: prev.user ? { ...prev.user, ...updates, lastActive: new Date() } : null
-    }));
+  const loadUserData = async (userId: string, email: string) => {
+    try {
+      const [profile, wallet, goals, checkIns] = await Promise.all([
+        fetchUserProfile(userId),
+        fetchUserWallet(userId),
+        fetchUserGoals(userId),
+        fetchUserCheckIns(userId)
+      ]);
+
+      setState({
+        user: profile ? { ...profile, email } : null,
+        goals,
+        squads: [], // TODO: Implement squad loading
+        wallet,
+        achievements: [], // TODO: Implement achievement loading
+        dailyCheckIns: checkIns,
+        loading: false
+      });
+    } catch (error) {
+      console.error('Failed to load user data:', error);
+      setState(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const updateUser = async (updates: Partial<User>) => {
+    if (!authUser || !state.user) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          username: updates.username,
+          avatar: updates.avatar,
+          timezone: updates.timezone,
+          xp: updates.xp,
+          coins: updates.coins,
+          level: updates.level,
+          total_staked: updates.totalStaked,
+          total_earned: updates.totalEarned,
+          current_streak: updates.currentStreak,
+          longest_streak: updates.longestStreak,
+          last_active: new Date().toISOString()
+        })
+        .eq('user_id', authUser.id);
+
+      if (error) throw error;
+
+      setState(prev => ({
+        ...prev,
+        user: prev.user ? { ...prev.user, ...updates, lastActive: new Date() } : null
+      }));
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile",
+        variant: "destructive"
+      });
+    }
   };
 
   const addXP = (amount: number) => {
@@ -180,42 +288,154 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  const createGoal = (goalData: Omit<Goal, 'id' | 'userId' | 'createdAt' | 'currentStreak' | 'totalCheckIns' | 'missedCheckIns' | 'totalBurned' | 'xpEarned'>) => {
-    const newGoal: Goal = {
-      ...goalData,
-      id: crypto.randomUUID(),
-      userId: state.user?.id || 'user_1',
-      currentStreak: 0,
-      totalCheckIns: 0,
-      missedCheckIns: 0,
-      totalBurned: 0,
-      xpEarned: 0,
-      createdAt: new Date()
-    };
+  const createGoal = async (goalData: Omit<Goal, 'id' | 'userId' | 'createdAt' | 'currentStreak' | 'totalCheckIns' | 'missedCheckIns' | 'totalBurned' | 'xpEarned'>) => {
+    if (!authUser) return;
 
-    setState(prev => ({
-      ...prev,
-      goals: [...prev.goals, newGoal]
-    }));
+    try {
+      const { data, error } = await supabase
+        .from('goals')
+        .insert({
+          user_id: authUser.id,
+          title: goalData.title,
+          description: goalData.description,
+          category: goalData.category,
+          frequency: goalData.frequency,
+          custom_days: goalData.customDays,
+          start_date: goalData.startDate.toISOString().split('T')[0],
+          end_date: goalData.endDate.toISOString().split('T')[0],
+          wager_amount: goalData.wagerAmount,
+          currency: goalData.currency,
+          privacy: goalData.privacy,
+          squad_id: goalData.squadId,
+          status: goalData.status
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const newGoal: Goal = {
+        id: data.id,
+        userId: data.user_id,
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        frequency: data.frequency,
+        customDays: data.custom_days,
+        startDate: new Date(data.start_date),
+        endDate: new Date(data.end_date),
+        wagerAmount: data.wager_amount,
+        currency: data.currency,
+        privacy: data.privacy,
+        squadId: data.squad_id,
+        status: data.status,
+        currentStreak: data.current_streak,
+        totalCheckIns: data.total_check_ins,
+        missedCheckIns: data.missed_check_ins,
+        totalBurned: data.total_burned,
+        xpEarned: data.xp_earned,
+        createdAt: new Date(data.created_at),
+        lastCheckIn: data.last_check_in ? new Date(data.last_check_in) : undefined
+      };
+
+      setState(prev => ({
+        ...prev,
+        goals: [...prev.goals, newGoal]
+      }));
+
+      toast({
+        title: "Goal created!",
+        description: `${newGoal.title} has been added to your goals`,
+      });
+    } catch (error) {
+      console.error('Error creating goal:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create goal",
+        variant: "destructive"
+      });
+    }
   };
 
-  const updateGoal = (goalId: string, updates: Partial<Goal>) => {
-    setState(prev => ({
-      ...prev,
-      goals: prev.goals.map(goal => 
-        goal.id === goalId ? { ...goal, ...updates } : goal
-      )
-    }));
+  const updateGoal = async (goalId: string, updates: Partial<Goal>) => {
+    if (!authUser) return;
+
+    try {
+      const { error } = await supabase
+        .from('goals')
+        .update({
+          title: updates.title,
+          description: updates.description,
+          category: updates.category,
+          frequency: updates.frequency,
+          custom_days: updates.customDays,
+          start_date: updates.startDate?.toISOString().split('T')[0],
+          end_date: updates.endDate?.toISOString().split('T')[0],
+          wager_amount: updates.wagerAmount,
+          currency: updates.currency,
+          privacy: updates.privacy,
+          squad_id: updates.squadId,
+          status: updates.status,
+          current_streak: updates.currentStreak,
+          total_check_ins: updates.totalCheckIns,
+          missed_check_ins: updates.missedCheckIns,
+          total_burned: updates.totalBurned,
+          xp_earned: updates.xpEarned,
+          last_check_in: updates.lastCheckIn?.toISOString()
+        })
+        .eq('id', goalId);
+
+      if (error) throw error;
+
+      setState(prev => ({
+        ...prev,
+        goals: prev.goals.map(goal => 
+          goal.id === goalId ? { ...goal, ...updates } : goal
+        )
+      }));
+    } catch (error) {
+      console.error('Error updating goal:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update goal",
+        variant: "destructive"
+      });
+    }
   };
 
-  const deleteGoal = (goalId: string) => {
-    setState(prev => ({
-      ...prev,
-      goals: prev.goals.filter(goal => goal.id !== goalId)
-    }));
+  const deleteGoal = async (goalId: string) => {
+    if (!authUser) return;
+
+    try {
+      const { error } = await supabase
+        .from('goals')
+        .delete()
+        .eq('id', goalId);
+
+      if (error) throw error;
+
+      setState(prev => ({
+        ...prev,
+        goals: prev.goals.filter(goal => goal.id !== goalId)
+      }));
+
+      toast({
+        title: "Goal deleted",
+        description: "Goal has been removed from your list"
+      });
+    } catch (error) {
+      console.error('Error deleting goal:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete goal",
+        variant: "destructive"
+      });
+    }
   };
 
-  const performCheckIn = (goalId: string, success: boolean, notes?: string) => {
+  const performCheckIn = async (goalId: string, success: boolean, notes?: string) => {
+    if (!authUser) return;
+    
     const goal = state.goals.find(g => g.id === goalId);
     if (!goal) return;
 
@@ -223,51 +443,76 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const xpEarned = success ? 25 : 0;
     const amountBurned = success ? 0 : goal.wagerAmount;
     
-    // Create check-in record
-    const checkIn: CheckIn = {
-      id: crypto.randomUUID(),
-      goalId,
-      userId: state.user?.id || 'user_1',
-      date: today,
-      success,
-      notes,
-      xpEarned,
-      amountBurned,
-      createdAt: new Date()
-    };
-
-    // Update goal stats
-    const updatedGoal: Partial<Goal> = {
-      lastCheckIn: today,
-      totalCheckIns: goal.totalCheckIns + 1,
-      currentStreak: success ? goal.currentStreak + 1 : 0,
-      missedCheckIns: success ? goal.missedCheckIns : goal.missedCheckIns + 1,
-      totalBurned: goal.totalBurned + amountBurned,
-      xpEarned: goal.xpEarned + xpEarned
-    };
-
-    setState(prev => ({
-      ...prev,
-      goals: prev.goals.map(g => g.id === goalId ? { ...g, ...updatedGoal } : g),
-      dailyCheckIns: [...prev.dailyCheckIns, checkIn]
-    }));
-
-    // Add XP and update user streak
-    if (success) {
-      addXP(xpEarned);
-      updateUser({ 
-        currentStreak: Math.max(state.user?.currentStreak || 0, goal.currentStreak + 1),
-        longestStreak: Math.max(state.user?.longestStreak || 0, goal.currentStreak + 1)
-      });
-    } else {
-      updateUser({ currentStreak: 0 });
-      // Update wallet (burn money)
-      if (state.wallet) {
-        updateWallet({
-          balance: state.wallet.balance - amountBurned,
-          totalBurned: state.wallet.totalBurned + amountBurned
+    try {
+      // Create check-in record
+      const { error: checkInError } = await supabase
+        .from('check_ins')
+        .insert({
+          goal_id: goalId,
+          user_id: authUser.id,
+          date: today.toISOString().split('T')[0],
+          success,
+          notes,
+          xp_earned: xpEarned,
+          amount_burned: amountBurned
         });
+
+      if (checkInError) throw checkInError;
+
+      // Update goal stats
+      const updatedGoal: Partial<Goal> = {
+        lastCheckIn: today,
+        totalCheckIns: goal.totalCheckIns + 1,
+        currentStreak: success ? goal.currentStreak + 1 : 0,
+        missedCheckIns: success ? goal.missedCheckIns : goal.missedCheckIns + 1,
+        totalBurned: goal.totalBurned + amountBurned,
+        xpEarned: goal.xpEarned + xpEarned
+      };
+
+      await updateGoal(goalId, updatedGoal);
+
+      // Create local check-in record for immediate UI update
+      const checkIn: CheckIn = {
+        id: crypto.randomUUID(),
+        goalId,
+        userId: authUser.id,
+        date: today,
+        success,
+        notes,
+        xpEarned,
+        amountBurned,
+        createdAt: new Date()
+      };
+
+      setState(prev => ({
+        ...prev,
+        dailyCheckIns: [...prev.dailyCheckIns, checkIn]
+      }));
+
+      // Add XP and update user streak
+      if (success) {
+        addXP(xpEarned);
+        updateUser({ 
+          currentStreak: Math.max(state.user?.currentStreak || 0, goal.currentStreak + 1),
+          longestStreak: Math.max(state.user?.longestStreak || 0, goal.currentStreak + 1)
+        });
+      } else {
+        updateUser({ currentStreak: 0 });
+        // Update wallet (burn money)
+        if (state.wallet) {
+          updateWallet({
+            balance: state.wallet.balance - amountBurned,
+            totalBurned: state.wallet.totalBurned + amountBurned
+          });
+        }
       }
+    } catch (error) {
+      console.error('Error performing check-in:', error);
+      toast({
+        title: "Error",
+        description: "Failed to record check-in",
+        variant: "destructive"
+      });
     }
   };
 
@@ -311,11 +556,36 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  const updateWallet = (updates: Partial<Wallet>) => {
-    setState(prev => ({
-      ...prev,
-      wallet: prev.wallet ? { ...prev.wallet, ...updates, updatedAt: new Date() } : null
-    }));
+  const updateWallet = async (updates: Partial<Wallet>) => {
+    if (!authUser || !state.wallet) return;
+
+    try {
+      const { error } = await supabase
+        .from('wallets')
+        .update({
+          balance: updates.balance,
+          currency: updates.currency,
+          total_deposited: updates.totalDeposited,
+          total_withdrawn: updates.totalWithdrawn,
+          total_burned: updates.totalBurned,
+          total_earned: updates.totalEarned
+        })
+        .eq('user_id', authUser.id);
+
+      if (error) throw error;
+
+      setState(prev => ({
+        ...prev,
+        wallet: prev.wallet ? { ...prev.wallet, ...updates, updatedAt: new Date() } : null
+      }));
+    } catch (error) {
+      console.error('Error updating wallet:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update wallet",
+        variant: "destructive"
+      });
+    }
   };
 
   const getStats = () => {
