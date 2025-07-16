@@ -13,9 +13,11 @@ import {
   Star
 } from "lucide-react";
 import { useGame } from "@/contexts/GameContext";
+import { useToast } from "@/hooks/use-toast";
 
 export function GameStats() {
   const { user, wallet, getStats } = useGame();
+  const { toast } = useToast();
   const stats = getStats();
 
   if (!user || !wallet) return null;
@@ -129,7 +131,15 @@ export function GameStats() {
                 <div className="text-sm text-muted-foreground">Available Balance</div>
               </div>
               
-              <Button className="w-full rounded-2xl font-semibold" size="lg">
+              <Button 
+                className="w-full rounded-2xl font-semibold" 
+                size="lg"
+                onClick={() => toast({
+                  title: "Coming Soon! 💳",
+                  description: "Payment integration is being developed. Stay tuned!",
+                  duration: 3000,
+                })}
+              >
                 💳 Add Money
               </Button>
             </div>
@@ -166,6 +176,11 @@ export function GameStats() {
           variant="outline" 
           className="h-16 rounded-2xl text-base font-semibold"
           size="lg"
+          onClick={() => toast({
+            title: "Coming Soon! 🚀",
+            description: "Squad functionality is being built. Stay tuned!",
+            duration: 3000,
+          })}
         >
           <Users className="h-5 w-5 mr-2" />
           Join Squad
@@ -175,6 +190,11 @@ export function GameStats() {
           variant="outline" 
           className="h-16 rounded-2xl text-base font-semibold"
           size="lg"
+          onClick={() => toast({
+            title: "Coming Soon! 🏆",
+            description: "Leaderboard is being developed. Check back soon!",
+            duration: 3000,
+          })}
         >
           <Trophy className="h-5 w-5 mr-2" />
           Leaderboard

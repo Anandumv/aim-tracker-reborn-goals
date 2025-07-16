@@ -147,11 +147,29 @@ const Index = () => {
               
               {goals.length > 0 && (
                 <div className="flex gap-3">
-                  <Button variant="outline" size="lg" className="rounded-2xl">
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="rounded-2xl"
+                    onClick={() => toast({
+                      title: "Coming Soon! 🚀",
+                      description: "Squad functionality is being built. Stay tuned!",
+                      duration: 3000,
+                    })}
+                  >
                     <Users className="h-5 w-5 mr-2" />
                     Find Squad
                   </Button>
-                  <Button variant="outline" size="lg" className="rounded-2xl">
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="rounded-2xl"
+                    onClick={() => toast({
+                      title: "Coming Soon! 🏆",
+                      description: "Leaderboard is being developed. Check back soon!",
+                      duration: 3000,
+                    })}
+                  >
                     <Trophy className="h-5 w-5 mr-2" />
                     Leaderboard
                   </Button>
