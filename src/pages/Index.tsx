@@ -12,6 +12,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { FindSquadDialog } from "@/components/FindSquadDialog";
+import { LeaderboardDialog } from "@/components/LeaderboardDialog";
 
 const Index = () => {
   const { 
@@ -146,32 +148,26 @@ const Index = () => {
               
               {goals.length > 0 && (
                 <div className="flex gap-3">
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
-                    className="rounded-2xl"
-                    onClick={() => toast({
-                      title: "Coming Soon! 🚀",
-                      description: "Squad functionality is being built. Stay tuned!",
-                      duration: 3000,
-                    })}
-                  >
-                    <Users className="h-5 w-5 mr-2" />
-                    Find Squad
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
-                    className="rounded-2xl"
-                    onClick={() => toast({
-                      title: "Coming Soon! 🏆",
-                      description: "Leaderboard is being developed. Check back soon!",
-                      duration: 3000,
-                    })}
-                  >
-                    <Trophy className="h-5 w-5 mr-2" />
-                    Leaderboard
-                  </Button>
+                  <FindSquadDialog>
+                    <Button 
+                      variant="outline" 
+                      size="lg" 
+                      className="rounded-2xl"
+                    >
+                      <Users className="h-5 w-5 mr-2" />
+                      Find Squad
+                    </Button>
+                  </FindSquadDialog>
+                  <LeaderboardDialog>
+                    <Button 
+                      variant="outline" 
+                      size="lg" 
+                      className="rounded-2xl"
+                    >
+                      <Trophy className="h-5 w-5 mr-2" />
+                      Leaderboard
+                    </Button>
+                  </LeaderboardDialog>
                 </div>
               )}
             </div>

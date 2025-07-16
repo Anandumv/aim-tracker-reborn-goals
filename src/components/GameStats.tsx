@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { 
   Trophy, 
   Flame, 
@@ -10,10 +11,17 @@ import {
   Users, 
   Crown,
   Medal,
-  Star
+  Star,
+  ChevronDown,
+  Plus,
+  Search
 } from "lucide-react";
 import { useGame } from "@/contexts/GameContext";
 import { useToast } from "@/hooks/use-toast";
+import { JoinSquadDialog } from "./JoinSquadDialog";
+import { FindSquadDialog } from "./FindSquadDialog";
+import { CreateSquadDialog } from "./CreateSquadDialog";
+import { LeaderboardDialog } from "./LeaderboardDialog";
 
 export function GameStats() {
   const { user, getStats } = useGame();
@@ -113,33 +121,50 @@ export function GameStats() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-4">
-        <Button 
-          variant="outline" 
-          className="h-16 rounded-2xl text-base font-semibold"
-          size="lg"
-          onClick={() => toast({
-            title: "Coming Soon! 🚀",
-            description: "Squad functionality is being built. Stay tuned!",
-            duration: 3000,
-          })}
-        >
-          <Users className="h-5 w-5 mr-2" />
-          Join Squad
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="outline" 
+              className="h-16 rounded-2xl text-base font-semibold"
+              size="lg"
+            >
+              <Users className="h-5 w-5 mr-2" />
+              Squad
+              <ChevronDown className="h-4 w-4 ml-2" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-48">
+            <CreateSquadDialog>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Squad
+              </DropdownMenuItem>
+            </CreateSquadDialog>
+            <JoinSquadDialog>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <Users className="h-4 w-4 mr-2" />
+                Join Squad
+              </DropdownMenuItem>
+            </JoinSquadDialog>
+            <FindSquadDialog>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <Search className="h-4 w-4 mr-2" />
+                Find Squad
+              </DropdownMenuItem>
+            </FindSquadDialog>
+          </DropdownMenuContent>
+        </DropdownMenu>
         
-        <Button 
-          variant="outline" 
-          className="h-16 rounded-2xl text-base font-semibold"
-          size="lg"
-          onClick={() => toast({
-            title: "Coming Soon! 🏆",
-            description: "Leaderboard is being developed. Check back soon!",
-            duration: 3000,
-          })}
-        >
-          <Trophy className="h-5 w-5 mr-2" />
-          Leaderboard
-        </Button>
+        <LeaderboardDialog>
+          <Button 
+            variant="outline" 
+            className="h-16 rounded-2xl text-base font-semibold"
+            size="lg"
+          >
+            <Trophy className="h-5 w-5 mr-2" />
+            Leaderboard
+          </Button>
+        </LeaderboardDialog>
       </div>
     </div>
   );

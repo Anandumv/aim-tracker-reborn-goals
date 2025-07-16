@@ -139,6 +139,37 @@ const fetchUserCheckIns = async (userId: string): Promise<CheckIn[]> => {
   }));
 };
 
+const fetchUserSquads = async (userId: string): Promise<Squad[]> => {
+  const { data, error } = await supabase
+    .from('squad_members')
+    .select(`
+      *,
+      squads (*)
+    `)
+    .eq('user_id', userId)
+    .eq('status', 'active');
+
+  if (error) {
+    console.error('Error fetching user squads:', error);
+    return [];
+  }
+
+  return data.map(member => ({
+    id: member.squads.id,
+    name: member.squads.name,
+    description: member.squads.description,
+    code: member.squads.code,
+    creatorId: member.squads.creator_id,
+    members: [], // Will be populated separately if needed
+    goalId: member.squads.goal_id,
+    totalPot: member.squads.total_pot,
+    weeklyPot: member.squads.weekly_pot,
+    maxMembers: member.squads.max_members,
+    isPublic: member.squads.is_public,
+    createdAt: new Date(member.squads.created_at)
+  }));
+};
+
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const { user: authUser, loading: authLoading } = useAuth();
   const { toast } = useToast();
@@ -173,16 +204,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const loadUserData = async (userId: string, email: string) => {
     try {
-      const [profile, goals, checkIns] = await Promise.all([
+      const [profile, goals, checkIns, squads] = await Promise.all([
         fetchUserProfile(userId),
         fetchUserGoals(userId),
-        fetchUserCheckIns(userId)
+        fetchUserCheckIns(userId),
+        fetchUserSquads(userId)
       ]);
 
       setState({
         user: profile ? { ...profile, email } : null,
         goals,
-        squads: [], // TODO: Implement squad loading
+        squads,
         achievements: [], // TODO: Implement achievement loading
         dailyCheckIns: checkIns,
         loading: false
@@ -475,37 +507,161 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const createSquad = (squadData: Omit<Squad, 'id' | 'creatorId' | 'members' | 'totalPot' | 'weeklyPot' | 'createdAt'>) => {
-    const newSquad: Squad = {
-      ...squadData,
-      id: crypto.randomUUID(),
-      creatorId: state.user?.id || 'user_1',
-      members: [{
-        id: crypto.randomUUID(),
-        userId: state.user?.id || 'user_1',
-        squadId: '',
-        role: 'creator',
-        joinedAt: new Date(),
-        weeklyXP: 0,
-        weeklyCheckIns: 0,
-        status: 'active'
-      }],
-      totalPot: 0,
-      weeklyPot: 0,
-      createdAt: new Date()
-    };
+  const createSquad = async (squadData: Omit<Squad, 'id' | 'creatorId' | 'members' | 'totalPot' | 'weeklyPot' | 'createdAt'>) => {
+    if (!authUser) return;
 
-    newSquad.members[0].squadId = newSquad.id;
+    try {
+      // Create squad in database
+      const { data: squadResult, error: squadError } = await supabase
+        .from('squads')
+        .insert({
+          name: squadData.name,
+          description: squadData.description,
+          code: squadData.code,
+          creator_id: authUser.id,
+          is_public: squadData.isPublic,
+          max_members: squadData.maxMembers,
+          goal_id: squadData.goalId
+        })
+        .select()
+        .single();
 
-    setState(prev => ({
-      ...prev,
-      squads: [...prev.squads, newSquad]
-    }));
+      if (squadError) throw squadError;
+
+      // Add creator as first member
+      const { error: memberError } = await supabase
+        .from('squad_members')
+        .insert({
+          squad_id: squadResult.id,
+          user_id: authUser.id,
+          role: 'creator'
+        });
+
+      if (memberError) throw memberError;
+
+      const newSquad: Squad = {
+        id: squadResult.id,
+        name: squadResult.name,
+        description: squadResult.description,
+        code: squadResult.code,
+        creatorId: squadResult.creator_id,
+        members: [{
+          id: crypto.randomUUID(),
+          userId: authUser.id,
+          squadId: squadResult.id,
+          role: 'creator',
+          joinedAt: new Date(),
+          weeklyXP: 0,
+          weeklyCheckIns: 0,
+          status: 'active'
+        }],
+        goalId: squadResult.goal_id,
+        totalPot: squadResult.total_pot,
+        weeklyPot: squadResult.weekly_pot,
+        maxMembers: squadResult.max_members,
+        isPublic: squadResult.is_public,
+        createdAt: new Date(squadResult.created_at)
+      };
+
+      setState(prev => ({
+        ...prev,
+        squads: [...prev.squads, newSquad]
+      }));
+
+      toast({
+        title: "Squad created! 🎉",
+        description: `${newSquad.name} has been created with code: ${newSquad.code}`,
+      });
+    } catch (error) {
+      console.error('Error creating squad:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create squad",
+        variant: "destructive"
+      });
+    }
   };
 
-  const joinSquad = (squadCode: string) => {
-    // Mock implementation - would normally make API call
-    console.log('Joining squad with code:', squadCode);
+  const joinSquad = async (squadCode: string) => {
+    if (!authUser) return;
+
+    try {
+      // Find squad by code
+      const { data: squadData, error: squadError } = await supabase
+        .from('squads')
+        .select('*')
+        .eq('code', squadCode)
+        .single();
+
+      if (squadError || !squadData) {
+        toast({
+          title: "Error",
+          description: "Squad not found. Please check the code and try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Check if already a member
+      const { data: existingMember } = await supabase
+        .from('squad_members')
+        .select('*')
+        .eq('squad_id', squadData.id)
+        .eq('user_id', authUser.id)
+        .single();
+
+      if (existingMember) {
+        toast({
+          title: "Already a member",
+          description: "You're already part of this squad!",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Add user to squad
+      const { error: memberError } = await supabase
+        .from('squad_members')
+        .insert({
+          squad_id: squadData.id,
+          user_id: authUser.id,
+          role: 'member'
+        });
+
+      if (memberError) throw memberError;
+
+      const newSquad: Squad = {
+        id: squadData.id,
+        name: squadData.name,
+        description: squadData.description,
+        code: squadData.code,
+        creatorId: squadData.creator_id,
+        members: [], // Will be populated when needed
+        goalId: squadData.goal_id,
+        totalPot: squadData.total_pot,
+        weeklyPot: squadData.weekly_pot,
+        maxMembers: squadData.max_members,
+        isPublic: squadData.is_public,
+        createdAt: new Date(squadData.created_at)
+      };
+
+      setState(prev => ({
+        ...prev,
+        squads: [...prev.squads, newSquad]
+      }));
+
+      toast({
+        title: "Joined squad! 🎉",
+        description: `Welcome to ${newSquad.name}!`,
+      });
+    } catch (error) {
+      console.error('Error joining squad:', error);
+      toast({
+        title: "Error",
+        description: "Failed to join squad",
+        variant: "destructive"
+      });
+    }
   };
 
   const leaveSquad = (squadId: string) => {
