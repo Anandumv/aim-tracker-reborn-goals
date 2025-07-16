@@ -9,6 +9,7 @@ import { Goal } from "@/types";
 
 interface CreateGoalDialogProps {
   onCreateGoal: (goal: Omit<Goal, 'id' | 'userId' | 'createdAt' | 'currentStreak' | 'totalCheckIns' | 'missedCheckIns' | 'totalBurned' | 'xpEarned' | 'lastCheckIn'>) => void;
+  children?: React.ReactNode;
 }
 
 const categories = [
@@ -23,7 +24,7 @@ const durations = [
   { label: "90 Days", days: 90 }
 ];
 
-export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
+export function CreateGoalDialog({ onCreateGoal, children }: CreateGoalDialogProps) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
@@ -61,35 +62,37 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="default" 
-          size="lg" 
-          className="rounded-2xl px-10 py-6 text-lg font-semibold shadow-glow hover:shadow-glow hover:scale-105 transition-all duration-200"
-        >
-          <Plus className="h-6 w-6 mr-3" />
-          Create Goal
-        </Button>
+        {children || (
+          <Button 
+            variant="default" 
+            size="lg" 
+            className="rounded-2xl px-10 py-6 text-lg font-semibold shadow-glow hover:shadow-glow hover:scale-105 transition-all duration-200"
+          >
+            <Plus className="h-6 w-6 mr-3" />
+            Create Goal
+          </Button>
+        )}
       </DialogTrigger>
       
       <DialogContent className="sm:max-w-[500px] border-0 bg-card/98 backdrop-blur-sm rounded-3xl">
-        <DialogHeader className="text-center space-y-4 pt-2">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary rounded-2xl mx-auto">
-            <Target className="h-8 w-8 text-primary-foreground" />
-          </div>
-          <DialogTitle className="text-3xl font-bold text-foreground">
-            Create Your Goal
-          </DialogTitle>
-          <p className="text-muted-foreground">
-            Set your goal and pick a duration to stay committed!
-          </p>
-        </DialogHeader>
+         <DialogHeader className="text-center space-y-4 pt-2">
+           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary rounded-2xl mx-auto">
+             <Target className="h-8 w-8 text-primary-foreground" />
+           </div>
+           <DialogTitle className="text-3xl font-bold text-foreground">
+             Start New Quest
+           </DialogTitle>
+           <p className="text-muted-foreground">
+             Choose your challenge and set your commitment level!
+           </p>
+         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6 mt-8">
           {/* Goal Title */}
           <div className="space-y-3">
-            <Label htmlFor="title" className="text-base font-semibold text-foreground">
-              What's your goal?
-            </Label>
+             <Label htmlFor="title" className="text-base font-semibold text-foreground">
+               What's your quest?
+             </Label>
             <Input
               id="title"
               value={title}
@@ -152,11 +155,11 @@ export function CreateGoalDialog({ onCreateGoal }: CreateGoalDialogProps) {
             <Button
               type="submit"
               variant="default"
-              className="flex-1 h-14 rounded-2xl text-base font-semibold shadow-glow"
-              disabled={!title.trim() || !category}
-            >
-              Create Goal
-            </Button>
+               className="flex-1 h-14 rounded-2xl text-base font-semibold shadow-glow"
+               disabled={!title.trim() || !category}
+             >
+               Start Quest
+             </Button>
           </div>
         </form>
       </DialogContent>

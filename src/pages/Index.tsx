@@ -1,19 +1,13 @@
 import { useState, useEffect } from "react";
 import { AccountabilityGoalCard } from "@/components/AccountabilityGoalCard";
 import { CreateGoalDialog } from "@/components/CreateGoalDialog";
-import { GameStats } from "@/components/GameStats";
 import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
-import { Target, Flame, Trophy, Users, Zap, Search, LogOut, Settings } from "lucide-react";
+import { Target, Flame, Zap, Search, LogOut, Crown } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { FindSquadDialog } from "@/components/FindSquadDialog";
-import { LeaderboardDialog } from "@/components/LeaderboardDialog";
 
 const Index = () => {
   const { 
@@ -28,15 +22,13 @@ const Index = () => {
   const { signOut } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterCategory, setFilterCategory] = useState("all");
-  const [filterStatus, setFilterStatus] = useState("active");
 
   // Show welcome toast for new users
   useEffect(() => {
     if (user && goals.length === 0) {
       toast({
-        title: "🎯 Welcome to Commit!",
-        description: "Ready to start tracking your goals? Create your first goal and build consistent habits!",
+        title: "🎯 Welcome to the Quest!",
+        description: "Ready to start your journey? Create your first quest and level up!",
         duration: 5000,
       });
     }
@@ -47,21 +39,16 @@ const Index = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your accountability journey...</p>
+          <p className="text-muted-foreground">Loading your quest journal...</p>
         </div>
       </div>
     );
   }
 
-  // Get unique categories
-  const categories = Array.from(new Set(goals.map(goal => goal.category)));
-
   // Filter goals
   const filteredGoals = goals.filter(goal => {
     const matchesSearch = goal.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = filterCategory === "all" || goal.category === filterCategory;
-    const matchesStatus = filterStatus === "all" || goal.status === filterStatus;
-    return matchesSearch && matchesCategory && matchesStatus;
+    return matchesSearch;
   });
 
   const handleCheckIn = (goalId: string, success: boolean) => {
@@ -69,104 +56,81 @@ const Index = () => {
     
     if (success) {
       toast({
-        title: "🎉 Great job!",
+        title: "🎉 Quest Complete!",
         description: "You earned 25 XP and kept your streak alive!",
         duration: 3000,
       });
     } else {
       toast({
-        title: "😞 Missed today!",
-        description: "Don't worry, you can get back on track tomorrow!",
+        title: "😞 Quest Failed!",
+        description: "Don't worry, you can try again tomorrow!",
         variant: "destructive",
         duration: 4000,
       });
     }
   };
 
-  const stats = getStats();
-
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header with Profile */}
-        <div className="flex justify-between items-center mb-12">
-          <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">
-              Your Goals
-            </h1>
-            <p className="text-muted-foreground">
-              Track your progress and build consistent habits
-            </p>
-          </div>
-
-          {/* User Profile Section */}
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        {/* Player Info */}
+        <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground">Welcome back,</p>
-              <p className="font-semibold text-foreground">{user?.username}</p>
-              <p className="text-sm text-muted-foreground">Level {user?.level} • {user?.xp} XP</p>
-            </div>
-            <Avatar className="h-12 w-12">
-              <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+            <Avatar className="h-14 w-14 ring-2 ring-primary/20">
+              <AvatarFallback className="bg-gradient-primary text-primary-foreground text-lg">
                 {user?.avatar || user?.username?.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <Button variant="outline" size="sm" onClick={() => signOut()}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
-
-        {/* Create Goal Button */}
-        <div className="mb-8">
-          <CreateGoalDialog onCreateGoal={createGoal} />
-        </div>
-
-        {/* Filters */}
-        {goals.length > 0 && (
-          <div className="flex flex-col sm:flex-row gap-4 mb-8">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search goals..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-12 border-0 bg-muted/30 text-base rounded-2xl"
-              />
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">{user?.username}</h1>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Crown className="h-4 w-4 text-primary" />
+                  Level {user?.level}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Zap className="h-4 w-4 text-primary" />
+                  {user?.xp} XP
+                </span>
+                <span className="flex items-center gap-1">
+                  <Flame className="h-4 w-4 text-primary" />
+                  {user?.currentStreak} streak
+                </span>
+              </div>
             </div>
-            
-            <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger className="w-full sm:w-48 h-12 border-0 bg-muted/30 rounded-2xl">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full sm:w-40 h-12 border-0 bg-muted/30 rounded-2xl">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Goals</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="failed">Failed</SelectItem>
-              </SelectContent>
-            </Select>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => signOut()}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Exit
+          </Button>
+        </div>
+
+        {/* New Quest Button */}
+        <div className="mb-8">
+          <CreateGoalDialog onCreateGoal={createGoal}>
+            <Button size="lg" className="w-full h-16 text-lg font-semibold rounded-2xl bg-gradient-primary hover:shadow-glow transition-all duration-200">
+              <Target className="h-6 w-6 mr-3" />
+              Start New Quest
+            </Button>
+          </CreateGoalDialog>
+        </div>
+
+        {/* Filter if there are multiple goals */}
+        {goals.length > 5 && (
+          <div className="mb-6">
+            <Input
+              placeholder="Search quests..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="border-0 bg-muted/30 h-12 rounded-2xl px-4"
+            />
           </div>
         )}
 
-        {/* Goals Grid */}
+        {/* Active Quests */}
         {filteredGoals.length > 0 ? (
-          <div className="space-y-6">
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Active Quests</h2>
             {filteredGoals.map((goal) => (
               <AccountabilityGoalCard
                 key={goal.id}
@@ -176,36 +140,27 @@ const Index = () => {
             ))}
           </div>
         ) : goals.length === 0 ? (
-          <Card className="border-0 bg-gradient-subtle rounded-3xl p-12 text-center">
-            <CardContent className="space-y-8">
-              <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-primary rounded-3xl">
-                <Target className="h-12 w-12 text-primary-foreground" />
-              </div>
-              
-              <div className="space-y-4">
-                <h2 className="text-3xl font-bold text-foreground">
-                  Ready to start? 🎯
-                </h2>
-                
-                <p className="text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
-                  Create your first goal and start building consistent habits that matter to you.
-                </p>
-              </div>
-
-              <CreateGoalDialog onCreateGoal={createGoal} />
-            </CardContent>
-          </Card>
-        ) : (
           <div className="text-center py-16">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-subtle rounded-2xl mb-6">
-              <Search className="h-8 w-8 text-primary" />
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-primary rounded-full mb-6">
+              <Target className="h-10 w-10 text-primary-foreground" />
             </div>
-            <h3 className="text-xl font-semibold mb-3 text-foreground">
-              No matches found
-            </h3>
-            <p className="text-muted-foreground">
-              Try adjusting your search or filters
+            <h2 className="text-2xl font-bold text-foreground mb-3">
+              Ready to Play? 🎮
+            </h2>
+            <p className="text-muted-foreground mb-8">
+              Start your first quest and begin your journey to success!
             </p>
+            <CreateGoalDialog onCreateGoal={createGoal}>
+              <Button size="lg" className="px-8 py-3 bg-gradient-primary hover:shadow-glow transition-all duration-200">
+                <Target className="h-5 w-5 mr-2" />
+                Create First Quest
+              </Button>
+            </CreateGoalDialog>
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">No quests found</p>
           </div>
         )}
       </div>
