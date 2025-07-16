@@ -17,7 +17,7 @@ export interface Goal {
   lastUpdated: Date;
 }
 
-const STORAGE_KEY = 'aim_goals';
+const STORAGE_KEY = 'grail_goals';
 
 export function useGoals() {
   const [goals, setGoals] = useState<Goal[]>([]);

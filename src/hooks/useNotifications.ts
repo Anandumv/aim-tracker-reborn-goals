@@ -9,7 +9,7 @@ interface NotificationSettings {
   lastShown: Date | null;
 }
 
-const NOTIFICATION_STORAGE_KEY = 'aim_notifications';
+const NOTIFICATION_STORAGE_KEY = 'grail_notifications';
 
 export function useNotifications() {
   const [settings, setSettings] = useState<NotificationSettings>({

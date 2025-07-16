@@ -1,6 +1,6 @@
 {
-  "name": "Aim: Goals & Progress",
-  "short_name": "Aim Goals",
+  "name": "Grail",
+  "short_name": "Grail",
   "description": "Simple goal tracking for meaningful progress",
   "start_url": "/",
   "display": "standalone",

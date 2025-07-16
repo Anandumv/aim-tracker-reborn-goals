@@ -122,7 +122,7 @@ export function SettingsDialog() {
             
             <div className="pl-8 text-sm text-muted-foreground">
               <p>
-                Aim is designed to be distraction-free and privacy-first. 
+                Grail is designed to be distraction-free and privacy-first. 
                 Focus on your goals without streaks, competitions, or social pressure.
               </p>
             </div>
