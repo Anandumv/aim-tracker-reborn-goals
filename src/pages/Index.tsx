@@ -1,16 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { GoalCard } from "@/components/GoalCard";
 import { AddGoalDialog } from "@/components/AddGoalDialog";
 import { StatsCard } from "@/components/StatsCard";
+import { SettingsDialog } from "@/components/SettingsDialog";
 import { useGoals } from "@/hooks/useGoals";
-import { Target, CheckCircle, Clock, TrendingUp, Search } from "lucide-react";
+import { useNotifications } from "@/hooks/useNotifications";
+import { Target, CheckCircle, Clock, TrendingUp, Search, Activity } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Index = () => {
   const { goals, addGoal, updateGoalProgress, toggleGoalComplete, stats } = useGoals();
+  const { sendGoalReminder } = useNotifications();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
+
+  // Send reminder notifications
+  useEffect(() => {
+    if (goals.length > 0) {
+      sendGoalReminder(stats.activeGoals, stats.todayUpdated);
+    }
+  }, [goals.length, stats.activeGoals, stats.todayUpdated, sendGoalReminder]);
 
   // Get unique categories
   const categories = Array.from(new Set(goals.map(goal => goal.category)));
@@ -27,8 +37,11 @@ const Index = () => {
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl shadow-card mb-6">
-            <Target className="h-8 w-8 text-primary-foreground" />
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl shadow-card">
+              <Target className="h-8 w-8 text-primary-foreground" />
+            </div>
+            <SettingsDialog />
           </div>
           
           <h1 className="text-4xl font-bold text-foreground mb-3">
@@ -38,6 +51,12 @@ const Index = () => {
           <p className="text-lg text-muted-foreground">
             Simple goal tracking for meaningful progress
           </p>
+          
+          {goals.length > 0 && (
+            <div className="mt-6 text-sm text-muted-foreground">
+              <p>🔒 Your data stays private - stored locally on your device</p>
+            </div>
+          )}
         </div>
 
         {/* Stats */}
@@ -59,6 +78,12 @@ const Index = () => {
               title="In Progress"
               value={stats.activeGoals}
               icon={Clock}
+            />
+            
+            <StatsCard
+              title="Updated Today"
+              value={stats.todayUpdated}
+              icon={Activity}
             />
             
             <StatsCard

@@ -5,7 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon, Plus } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { calculatePeriodDates } from "@/utils/timeUtils";
 
 interface Goal {
   id: string;
@@ -17,11 +22,15 @@ interface Goal {
   category: string;
   createdAt: Date;
   deadline?: Date;
+  period: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom';
+  periodStartDate: Date;
+  periodEndDate: Date;
   completed: boolean;
+  lastUpdated: Date;
 }
 
 interface AddGoalDialogProps {
-  onAddGoal: (goal: Omit<Goal, 'id' | 'currentValue' | 'completed' | 'createdAt'>) => void;
+  onAddGoal: (goal: Omit<Goal, 'id' | 'currentValue' | 'completed' | 'createdAt' | 'lastUpdated'>) => void;
 }
 
 const categories = [
@@ -32,6 +41,15 @@ const units = [
   "times", "hours", "days", "minutes", "pages", "exercises", "lessons"
 ];
 
+const periods = [
+  { value: 'daily', label: 'Daily' },
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'quarterly', label: 'Quarterly' },
+  { value: 'yearly', label: 'Yearly' },
+  { value: 'custom', label: 'Custom Period' },
+];
+
 export function AddGoalDialog({ onAddGoal }: AddGoalDialogProps) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -39,6 +57,8 @@ export function AddGoalDialog({ onAddGoal }: AddGoalDialogProps) {
   const [targetValue, setTargetValue] = useState<number>(10);
   const [unit, setUnit] = useState("times");
   const [category, setCategory] = useState("");
+  const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom'>('monthly');
+  const [customEndDate, setCustomEndDate] = useState<Date>();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,12 +67,17 @@ export function AddGoalDialog({ onAddGoal }: AddGoalDialogProps) {
       return;
     }
 
+    const { start, end } = calculatePeriodDates(period, customEndDate);
+
     onAddGoal({
       title: title.trim(),
       description: description.trim() || undefined,
       targetValue,
       unit,
-      category
+      category,
+      period,
+      periodStartDate: start,
+      periodEndDate: end,
     });
 
     // Reset form
@@ -61,6 +86,8 @@ export function AddGoalDialog({ onAddGoal }: AddGoalDialogProps) {
     setTargetValue(10);
     setUnit("times");
     setCategory("");
+    setPeriod('monthly');
+    setCustomEndDate(undefined);
     setOpen(false);
   };
 
@@ -147,6 +174,56 @@ export function AddGoalDialog({ onAddGoal }: AddGoalDialogProps) {
               </SelectContent>
             </Select>
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="period" className="text-sm font-medium text-foreground">
+              Time Period
+            </Label>
+            <Select value={period} onValueChange={(value: any) => setPeriod(value)} required>
+              <SelectTrigger className="border-0 bg-muted/50 h-12">
+                <SelectValue placeholder="Choose time period" />
+              </SelectTrigger>
+              <SelectContent>
+                {periods.map((p) => (
+                  <SelectItem key={p.value} value={p.value}>
+                    {p.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {period === 'custom' && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-foreground">
+                End Date
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal border-0 bg-muted/50 h-12",
+                      !customEndDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {customEndDate ? format(customEndDate, "PPP") : "Pick end date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={customEndDate}
+                    onSelect={setCustomEndDate}
+                    disabled={(date) => date < new Date()}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="description" className="text-sm font-medium text-foreground">

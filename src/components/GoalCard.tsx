@@ -2,8 +2,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Circle, Plus, Minus } from "lucide-react";
+import { CheckCircle, Circle, Plus, Minus, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getTimeRemaining, formatTimeRemaining } from "@/utils/timeUtils";
 
 interface Goal {
   id: string;
@@ -15,7 +16,11 @@ interface Goal {
   category: string;
   createdAt: Date;
   deadline?: Date;
+  period: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom';
+  periodStartDate: Date;
+  periodEndDate: Date;
   completed: boolean;
+  lastUpdated: Date;
 }
 
 interface GoalCardProps {
@@ -27,6 +32,8 @@ interface GoalCardProps {
 export function GoalCard({ goal, onUpdate, onToggleComplete }: GoalCardProps) {
   const progressPercentage = (goal.currentValue / goal.targetValue) * 100;
   const isCompleted = goal.completed || progressPercentage >= 100;
+  const timeRemaining = getTimeRemaining(goal.periodEndDate);
+  const timeRemainingText = formatTimeRemaining(timeRemaining);
 
   const handleIncrement = () => {
     if (!isCompleted) {
@@ -59,6 +66,13 @@ export function GoalCard({ goal, onUpdate, onToggleComplete }: GoalCardProps) {
             <Badge variant="secondary" className="text-xs font-medium px-2 py-1">
               {goal.category}
             </Badge>
+            
+            {!isCompleted && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Clock className="h-3 w-3" />
+                {timeRemainingText}
+              </div>
+            )}
           </div>
           
           <Button
