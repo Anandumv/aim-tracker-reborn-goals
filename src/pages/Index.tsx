@@ -87,28 +87,16 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex justify-between items-start mb-12">
-          <div className="text-center flex-1">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-primary rounded-3xl shadow-glow mb-8">
-              <Target className="h-10 w-10 text-primary-foreground" />
-            </div>
-            
-            <h1 className="text-5xl font-bold text-foreground mb-4">
-              Commit
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Header with Profile */}
+        <div className="flex justify-between items-center mb-12">
+          <div>
+            <h1 className="text-4xl font-bold text-foreground mb-2">
+              Your Goals
             </h1>
-            
-            <p className="text-xl text-muted-foreground mb-6">
-              Track Your Goals and Build Habits
+            <p className="text-muted-foreground">
+              Track your progress and build consistent habits
             </p>
-            
-            <div className="max-w-2xl mx-auto text-center">
-              <p className="text-base text-muted-foreground leading-relaxed">
-                Set meaningful goals, track your progress, join accountability squads, and earn rewards for success. 
-                Build consistent habits and celebrate your wins!
-              </p>
-            </div>
           </div>
 
           {/* User Profile Section */}
@@ -116,176 +104,110 @@ const Index = () => {
             <div className="text-right">
               <p className="text-sm text-muted-foreground">Welcome back,</p>
               <p className="font-semibold text-foreground">{user?.username}</p>
+              <p className="text-sm text-muted-foreground">Level {user?.level} • {user?.xp} XP</p>
             </div>
-            <Avatar className="h-10 w-10">
+            <Avatar className="h-12 w-12">
               <AvatarFallback className="bg-gradient-primary text-primary-foreground">
-                {user?.avatar || '👤'}
+                {user?.avatar || user?.username?.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => signOut()}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
-            </div>
+            <Button variant="outline" size="sm" onClick={() => signOut()}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
           </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* Left Column - Game Stats */}
-          <div className="xl:col-span-1 order-2 xl:order-1">
-            <GameStats />
-          </div>
+        {/* Create Goal Button */}
+        <div className="mb-8">
+          <CreateGoalDialog onCreateGoal={createGoal} />
+        </div>
 
-          {/* Right Column - Goals */}
-          <div className="xl:col-span-2 order-1 xl:order-2">
-            {/* Action Bar */}
-            <div className="flex flex-col lg:flex-row gap-4 mb-8">
-              <div className="flex-1">
-                <CreateGoalDialog onCreateGoal={createGoal} />
+        {/* Filters */}
+        {goals.length > 0 && (
+          <div className="flex flex-col sm:flex-row gap-4 mb-8">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search goals..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-12 h-12 border-0 bg-muted/30 text-base rounded-2xl"
+              />
+            </div>
+            
+            <Select value={filterCategory} onValueChange={setFilterCategory}>
+              <SelectTrigger className="w-full sm:w-48 h-12 border-0 bg-muted/30 rounded-2xl">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-full sm:w-40 h-12 border-0 bg-muted/30 rounded-2xl">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Goals</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* Goals Grid */}
+        {filteredGoals.length > 0 ? (
+          <div className="space-y-6">
+            {filteredGoals.map((goal) => (
+              <AccountabilityGoalCard
+                key={goal.id}
+                goal={goal}
+                onCheckIn={handleCheckIn}
+              />
+            ))}
+          </div>
+        ) : goals.length === 0 ? (
+          <Card className="border-0 bg-gradient-subtle rounded-3xl p-12 text-center">
+            <CardContent className="space-y-8">
+              <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-primary rounded-3xl">
+                <Target className="h-12 w-12 text-primary-foreground" />
               </div>
               
-              {goals.length > 0 && (
-                <div className="flex gap-3">
-                  <FindSquadDialog>
-                    <Button 
-                      variant="outline" 
-                      size="lg" 
-                      className="rounded-2xl"
-                    >
-                      <Users className="h-5 w-5 mr-2" />
-                      Find Squad
-                    </Button>
-                  </FindSquadDialog>
-                  <LeaderboardDialog>
-                    <Button 
-                      variant="outline" 
-                      size="lg" 
-                      className="rounded-2xl"
-                    >
-                      <Trophy className="h-5 w-5 mr-2" />
-                      Leaderboard
-                    </Button>
-                  </LeaderboardDialog>
-                </div>
-              )}
-            </div>
-
-            {/* Filters */}
-            {goals.length > 0 && (
-              <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search goals..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 h-12 border-0 bg-muted/30 text-base rounded-2xl"
-                  />
-                </div>
+              <div className="space-y-4">
+                <h2 className="text-3xl font-bold text-foreground">
+                  Ready to start? 🎯
+                </h2>
                 
-                <Select value={filterCategory} onValueChange={setFilterCategory}>
-                  <SelectTrigger className="w-full sm:w-48 h-12 border-0 bg-muted/30 rounded-2xl">
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger className="w-full sm:w-40 h-12 border-0 bg-muted/30 rounded-2xl">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Goals</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="failed">Failed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {/* Goals Grid */}
-            {filteredGoals.length > 0 ? (
-              <div className="space-y-6">
-                {filteredGoals.map((goal) => (
-                  <AccountabilityGoalCard
-                    key={goal.id}
-                    goal={goal}
-                    onCheckIn={handleCheckIn}
-                  />
-                ))}
-              </div>
-            ) : goals.length === 0 ? (
-              <Card className="border-0 bg-gradient-subtle rounded-3xl p-12 text-center">
-                <CardContent className="space-y-8">
-                  <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-primary rounded-3xl">
-                    <Target className="h-12 w-12 text-primary-foreground" />
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <h2 className="text-3xl font-bold text-foreground">
-                      Ready to Commit? 🎯
-                    </h2>
-                    
-                    <p className="text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
-                      Turn your goals into serious commitments. Track your progress, join squads, 
-                      and watch your motivation skyrocket!
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
-                    <div className="text-center space-y-3">
-                      <div className="w-16 h-16 bg-primary-light rounded-2xl flex items-center justify-center mx-auto">
-                        <Target className="h-8 w-8 text-primary" />
-                      </div>
-                      <h3 className="font-semibold text-foreground">Set Goals</h3>
-                      <p className="text-sm text-muted-foreground">Choose what matters and track your progress</p>
-                    </div>
-                    
-                    <div className="text-center space-y-3">
-                      <div className="w-16 h-16 bg-primary-light rounded-2xl flex items-center justify-center mx-auto">
-                        <Users className="h-8 w-8 text-primary" />
-                      </div>
-                      <h3 className="font-semibold text-foreground">Join Squads</h3>
-                      <p className="text-sm text-muted-foreground">Get accountability from friends</p>
-                    </div>
-                    
-                    <div className="text-center space-y-3">
-                      <div className="w-16 h-16 bg-primary-light rounded-2xl flex items-center justify-center mx-auto">
-                        <Trophy className="h-8 w-8 text-primary" />
-                      </div>
-                      <h3 className="font-semibold text-foreground">Earn Rewards</h3>
-                      <p className="text-sm text-muted-foreground">Win XP, level up, and celebrate success</p>
-                    </div>
-                  </div>
-
-                  <CreateGoalDialog onCreateGoal={createGoal} />
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="text-center py-16">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-subtle rounded-2xl mb-6">
-                  <Search className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold mb-3 text-foreground">
-                  No matches found
-                </h3>
-                <p className="text-muted-foreground">
-                  Try adjusting your search or filters
+                <p className="text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
+                  Create your first goal and start building consistent habits that matter to you.
                 </p>
               </div>
-            )}
+
+              <CreateGoalDialog onCreateGoal={createGoal} />
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="text-center py-16">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-subtle rounded-2xl mb-6">
+              <Search className="h-8 w-8 text-primary" />
+            </div>
+            <h3 className="text-xl font-semibold mb-3 text-foreground">
+              No matches found
+            </h3>
+            <p className="text-muted-foreground">
+              Try adjusting your search or filters
+            </p>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
