@@ -268,6 +268,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       const newXP = prev.user.xp + amount;
       const newLevel = Math.floor(newXP / 250) + 1; // Level up every 250 XP
       
+      // Update user in database
+      updateUser({ xp: newXP, level: newLevel });
+      
       return {
         ...prev,
         user: {
@@ -385,6 +388,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         .eq('id', goalId);
 
       if (error) throw error;
+
+      // If goal is being completed, give XP bonus
+      if (updates.status === 'completed') {
+        addXP(100); // Quest completion bonus
+      }
 
       setState(prev => ({
         ...prev,

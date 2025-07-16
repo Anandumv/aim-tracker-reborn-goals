@@ -4,12 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
   Target, 
-  Flame, 
   Trophy, 
-  Users, 
   Clock, 
-  CheckCircle, 
-  X,
+  CheckCircle,
   Zap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,145 +15,101 @@ import { useGame } from "@/contexts/GameContext";
 
 interface GoalCardProps {
   goal: Goal;
-  onCheckIn: (goalId: string, success: boolean) => void;
+  onComplete: (goalId: string) => void;
 }
 
-export function AccountabilityGoalCard({ goal, onCheckIn }: GoalCardProps) {
-  const { user } = useGame();
-  
-  const today = new Date().toDateString();
-  const hasCheckedInToday = goal.lastCheckIn && 
-    new Date(goal.lastCheckIn).toDateString() === today;
-
-  const progressPercentage = Math.round(
-    (goal.totalCheckIns / Math.max(1, goal.totalCheckIns + goal.missedCheckIns)) * 100
-  );
-
+export function AccountabilityGoalCard({ goal, onComplete }: GoalCardProps) {
   const daysRemaining = Math.ceil(
     (goal.endDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
   );
 
-  const streakColor = goal.currentStreak >= 7 ? "text-orange-500" : 
-                     goal.currentStreak >= 3 ? "text-yellow-500" : "text-gray-400";
+  const totalDays = Math.ceil(
+    (goal.endDate.getTime() - goal.startDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  const progressPercentage = Math.max(0, Math.round(((totalDays - daysRemaining) / totalDays) * 100));
+
+  const isCompleted = goal.status === 'completed';
+  const isExpired = daysRemaining <= 0 && !isCompleted;
 
   return (
     <Card className={cn(
-      "relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-glow border-0 rounded-3xl",
-      goal.status === 'active' ? "bg-card/80 backdrop-blur-sm" : "bg-muted/50",
-      hasCheckedInToday && "ring-2 ring-primary/50"
+      "relative overflow-hidden transition-all duration-300 hover:scale-[1.02] border-0 rounded-3xl",
+      isCompleted ? "bg-gradient-to-r from-green-500/20 to-emerald-500/20 ring-2 ring-green-500/30" :
+      isExpired ? "bg-gradient-to-r from-red-500/20 to-rose-500/20 ring-2 ring-red-500/30" :
+      "bg-card/80 backdrop-blur-sm hover:shadow-glow"
     )}>
       {/* Status indicator */}
       <div className={cn(
         "absolute top-0 left-0 right-0 h-1",
-        goal.status === 'active' ? "bg-gradient-primary" : "bg-muted"
+        isCompleted ? "bg-gradient-to-r from-green-500 to-emerald-500" :
+        isExpired ? "bg-gradient-to-r from-red-500 to-rose-500" :
+        "bg-gradient-primary"
       )} />
       
       <CardContent className="p-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1 min-w-0">
-            <h3 className="text-xl font-bold text-foreground mb-2 truncate">
+            <h3 className="text-xl font-bold text-foreground mb-3 truncate">
               {goal.title}
             </h3>
             
-            <div className="flex items-center gap-3 mb-3">
-              <Badge variant="secondary" className="text-sm font-medium px-3 py-1 rounded-full bg-primary-light text-primary">
-                {goal.category}
-              </Badge>
-
-              {goal.privacy === 'squad' && (
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <Users className="h-4 w-4" />
-                  Squad
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Flame className={cn("h-4 w-4", streakColor)} />
-                <span className={streakColor}>{goal.currentStreak} day streak</span>
-              </div>
-              
+            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
               <div className="flex items-center gap-1">
                 <Clock className="h-4 w-4" />
-                {daysRemaining}d left
+                {isCompleted ? "Completed!" : isExpired ? "Expired" : `${daysRemaining}d left`}
               </div>
               
               <div className="flex items-center gap-1">
                 <Zap className="h-4 w-4 text-primary" />
-                {goal.xpEarned} XP
+                {progressPercentage}% progress
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="space-y-2">
+              <Progress value={progressPercentage} className="h-2 bg-muted/30" />
+              <div className="text-xs text-muted-foreground text-center">
+                Day {totalDays - daysRemaining + 1} of {totalDays}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Progress Section */}
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Success Rate</span>
-              <span className="font-medium text-foreground">
-                {goal.totalCheckIns} / {goal.totalCheckIns + goal.missedCheckIns} ({progressPercentage}%)
-              </span>
-            </div>
-            
-            <Progress value={progressPercentage} className="h-2 bg-muted/30" />
+        {/* Action Button */}
+        {!isCompleted && !isExpired && (
+          <div className="pt-4 border-t border-border">
+            <Button
+              variant="default"
+              className="w-full h-12 rounded-2xl font-semibold bg-gradient-primary hover:shadow-glow transition-all duration-200"
+              onClick={() => onComplete(goal.id)}
+            >
+              <Trophy className="h-5 w-5 mr-2" />
+              Complete Quest
+            </Button>
           </div>
+        )}
 
-          {/* Stats Row */}
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-primary">{goal.totalCheckIns}</div>
-              <div className="text-xs text-muted-foreground">Check-ins</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-destructive">{goal.missedCheckIns}</div>
-              <div className="text-xs text-muted-foreground">Missed</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-success">{goal.xpEarned}</div>
-              <div className="text-xs text-muted-foreground">XP Earned</div>
+        {/* Completion Status */}
+        {isCompleted && (
+          <div className="pt-4 border-t border-border">
+            <div className="flex items-center justify-center gap-2 text-green-600">
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-medium">Quest Completed! 🎉</span>
             </div>
           </div>
+        )}
 
-          {/* Check-in Actions */}
-          {goal.status === 'active' && (
-            <div className="pt-4 border-t border-border">
-              {hasCheckedInToday ? (
-                <div className="flex items-center justify-center gap-2 text-success">
-                  <CheckCircle className="h-5 w-5" />
-                  <span className="font-medium">Checked in today!</span>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="text-center text-sm font-medium text-foreground">
-                    Did you complete your goal today?
-                  </div>
-                  <div className="flex gap-3">
-                    <Button
-                      variant="default"
-                      className="flex-1 h-12 rounded-2xl font-semibold shadow-glow"
-                      onClick={() => onCheckIn(goal.id, true)}
-                    >
-                      <CheckCircle className="h-5 w-5 mr-2" />
-                      Yes! ✅
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      className="flex-1 h-12 rounded-2xl"
-                      onClick={() => onCheckIn(goal.id, false)}
-                    >
-                      <X className="h-5 w-5 mr-2" />
-                      No 😞
-                    </Button>
-                  </div>
-                </div>
-              )}
+        {/* Expired Status */}
+        {isExpired && (
+          <div className="pt-4 border-t border-border">
+            <div className="flex items-center justify-center gap-2 text-red-600">
+              <Target className="h-5 w-5" />
+              <span className="font-medium">Quest Expired 💀</span>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

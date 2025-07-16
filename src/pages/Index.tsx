@@ -15,8 +15,7 @@ const Index = () => {
     goals, 
     loading, 
     createGoal, 
-    performCheckIn,
-    getStats
+    updateGoal
   } = useGame();
   
   const { signOut } = useAuth();
@@ -51,23 +50,28 @@ const Index = () => {
     return matchesSearch;
   });
 
-  const handleCheckIn = (goalId: string, success: boolean) => {
-    performCheckIn(goalId, success);
+  const handleCompleteGoal = async (goalId: string) => {
+    const goal = goals.find(g => g.id === goalId);
+    if (!goal) return;
+
+    // Update goal to completed
+    await updateGoal(goalId, { status: 'completed' });
     
-    if (success) {
+    // Show epic completion alert
+    toast({
+      title: "🎉 QUEST COMPLETED!",
+      description: `Amazing work! You've conquered "${goal.title}" and earned epic rewards!`,
+      duration: 5000,
+    });
+
+    // Add some celebratory XP
+    setTimeout(() => {
       toast({
-        title: "🎉 Quest Complete!",
-        description: "You earned 25 XP and kept your streak alive!",
+        title: "⚡ +100 XP BONUS!",
+        description: "Quest completion bonus earned!",
         duration: 3000,
       });
-    } else {
-      toast({
-        title: "😞 Quest Failed!",
-        description: "Don't worry, you can try again tomorrow!",
-        variant: "destructive",
-        duration: 4000,
-      });
-    }
+    }, 1000);
   };
 
   return (
@@ -135,7 +139,7 @@ const Index = () => {
               <AccountabilityGoalCard
                 key={goal.id}
                 goal={goal}
-                onCheckIn={handleCheckIn}
+                onComplete={handleCompleteGoal}
               />
             ))}
           </div>
