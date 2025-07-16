@@ -10,7 +10,7 @@
   "plugins": {
     "LocalNotifications": {
       "smallIcon": "ic_stat_icon_config_sample",
-      "iconColor": "#9C5CFF",
+      "iconColor": "#F59E0B",
       "sound": "beep.wav"
     },
     "SplashScreen": {

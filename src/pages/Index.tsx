@@ -37,24 +37,31 @@ const Index = () => {
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl shadow-card">
-              <Target className="h-8 w-8 text-primary-foreground" />
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-primary rounded-3xl shadow-glow">
+              <Target className="h-10 w-10 text-primary-foreground" />
             </div>
             <SettingsDialog />
           </div>
           
-          <h1 className="text-4xl font-bold text-foreground mb-3">
+          <h1 className="text-5xl font-bold text-foreground mb-4">
             Grail
           </h1>
           
-          <p className="text-lg text-muted-foreground">
-            Simple goal tracking for meaningful progress
+          <p className="text-xl text-muted-foreground mb-6">
+            Your personal goal companion
           </p>
           
+          <div className="max-w-md mx-auto text-center">
+            <p className="text-base text-muted-foreground leading-relaxed">
+              Track what matters. No pressure, no streaks, just meaningful progress toward your goals.
+            </p>
+          </div>
+          
           {goals.length > 0 && (
-            <div className="mt-6 text-sm text-muted-foreground">
-              <p>🔒 Your data stays private - stored locally on your device</p>
+            <div className="mt-8 inline-flex items-center gap-2 text-sm text-muted-foreground bg-primary-light px-4 py-2 rounded-full">
+              <div className="w-2 h-2 bg-success rounded-full"></div>
+              Your data stays private on your device
             </div>
           )}
         </div>
@@ -124,13 +131,13 @@ const Index = () => {
         )}
 
         {/* Add Goal */}
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mb-12">
           <AddGoalDialog onAddGoal={addGoal} />
         </div>
 
         {/* Goals Grid */}
         {filteredGoals.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
             {filteredGoals.map((goal) => (
               <GoalCard
                 key={goal.id}
@@ -141,25 +148,58 @@ const Index = () => {
             ))}
           </div>
         ) : goals.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-muted/30 rounded-2xl mb-6">
-              <Target className="h-8 w-8 text-muted-foreground" />
+          <div className="text-center py-20">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-subtle rounded-3xl mb-8">
+              <Target className="h-10 w-10 text-primary" />
             </div>
             
-            <h3 className="text-xl font-semibold mb-3 text-foreground">
-              Ready to start?
+            <h3 className="text-2xl font-semibold mb-4 text-foreground">
+              Welcome to Grail! 
             </h3>
             
-            <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-              Create your first goal and begin tracking your progress toward meaningful achievements.
+            <p className="text-lg text-muted-foreground mb-8 max-w-lg mx-auto leading-relaxed">
+              Start your journey by creating your first goal. Whether it's reading more books, 
+              exercising regularly, or learning a new skill - we're here to help you succeed.
             </p>
             
             <AddGoalDialog onAddGoal={addGoal} />
+            
+            <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl mx-auto">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-primary-light rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <Target className="h-6 w-6 text-primary" />
+                </div>
+                <h4 className="font-semibold text-foreground mb-1">Set Goals</h4>
+                <p className="text-sm text-muted-foreground">Choose what matters to you</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="w-12 h-12 bg-primary-light rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <TrendingUp className="h-6 w-6 text-primary" />
+                </div>
+                <h4 className="font-semibold text-foreground mb-1">Track Progress</h4>
+                <p className="text-sm text-muted-foreground">See your improvement over time</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="w-12 h-12 bg-primary-light rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="h-6 w-6 text-primary" />
+                </div>
+                <h4 className="font-semibold text-foreground mb-1">Achieve Success</h4>
+                <p className="text-sm text-muted-foreground">Celebrate your wins</p>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="text-center py-16">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-subtle rounded-2xl mb-6">
+              <Search className="h-8 w-8 text-primary" />
+            </div>
+            <h3 className="text-xl font-semibold mb-3 text-foreground">
+              No matches found
+            </h3>
             <p className="text-muted-foreground">
-              No goals match your search criteria
+              Try adjusting your search or filters
             </p>
           </div>
         )}

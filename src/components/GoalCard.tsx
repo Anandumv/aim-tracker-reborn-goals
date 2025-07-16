@@ -59,30 +59,31 @@ export function GoalCard({ goal, onUpdate, onToggleComplete }: GoalCardProps) {
 
   return (
     <Card className={cn(
-      "group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-card border-0 bg-card/50 backdrop-blur-sm",
-      isCompleted && "bg-gradient-subtle"
+      "group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-glow border-0 bg-card/80 backdrop-blur-sm rounded-3xl",
+      isCompleted && "bg-gradient-subtle border border-primary/20"
     )}>
-      <CardContent className="p-6">
+      <CardContent className="p-8">
         {/* Header */}
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start justify-between mb-6">
           <div className="flex-1 min-w-0">
             <h3 className={cn(
-              "text-lg font-semibold text-foreground mb-1 truncate",
+              "text-xl font-bold text-foreground mb-2 truncate",
               isCompleted && "line-through text-muted-foreground"
             )}>
               {goal.title}
             </h3>
             
-            <Badge variant="secondary" className="text-xs font-medium px-2 py-1">
-              {goal.category}
-            </Badge>
-            
-            {!isCompleted && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                {timeRemainingText}
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              <Badge variant="secondary" className="text-sm font-medium px-3 py-1 rounded-full bg-primary-light text-primary">
+                {goal.category}
+              </Badge>
+              {!isCompleted && (
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <Clock className="h-4 w-4" />
+                  {timeRemainingText}
+                </div>
+              )}
+            </div>
           </div>
           
           <Button

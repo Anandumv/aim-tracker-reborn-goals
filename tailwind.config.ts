@@ -79,7 +79,8 @@ export default {
 			},
 			boxShadow: {
 				'subtle': 'var(--shadow-subtle)',
-				'card': 'var(--shadow-card)'
+				'card': 'var(--shadow-card)',
+				'glow': 'var(--shadow-glow)'
 			},
 			keyframes: {
 				'accordion-down': {
