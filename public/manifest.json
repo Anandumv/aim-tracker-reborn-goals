@@ -1,7 +1,7 @@
 {
-  "name": "Grail",
-  "short_name": "Grail",
-  "description": "Simple goal tracking for meaningful progress",
+  "name": "Commit - Accountability Goals",
+  "short_name": "Commit",
+  "description": "Set goals, stake money, join squads, and earn rewards for success",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
