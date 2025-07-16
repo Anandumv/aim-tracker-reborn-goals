@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { Capacitor } from '@capacitor/core';
 
 interface NotificationSettings {
   enabled: boolean;
@@ -46,28 +48,55 @@ export function useNotifications() {
   }, [settings]);
 
   const requestPermission = async (): Promise<boolean> => {
-    if (!('Notification' in window)) {
-      console.warn('This browser does not support notifications');
-      return false;
-    }
+    if (Capacitor.isNativePlatform()) {
+      // Request permission for native mobile notifications
+      const permission = await LocalNotifications.requestPermissions();
+      const granted = permission.display === 'granted';
+      setPermission(granted ? 'granted' : 'denied');
+      return granted;
+    } else {
+      // Fallback to web notifications
+      if (!('Notification' in window)) {
+        console.warn('This browser does not support notifications');
+        return false;
+      }
 
-    const result = await Notification.requestPermission();
-    setPermission(result);
-    return result === 'granted';
+      const result = await Notification.requestPermission();
+      setPermission(result);
+      return result === 'granted';
+    }
   };
 
   const updateSettings = (newSettings: Partial<NotificationSettings>) => {
     setSettings(prev => ({ ...prev, ...newSettings }));
   };
 
-  const showNotification = (title: string, body: string, options?: NotificationOptions) => {
+  const showNotification = async (title: string, body: string, options?: NotificationOptions) => {
     if (permission === 'granted' && settings.enabled) {
-      new Notification(title, {
-        body,
-        icon: '/favicon.ico',
-        badge: '/favicon.ico',
-        ...options,
-      });
+      if (Capacitor.isNativePlatform()) {
+        // Use native notifications on mobile
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              title,
+              body,
+              id: Math.floor(Math.random() * 1000000),
+              schedule: { at: new Date(Date.now() + 1000) }, // Schedule for immediate delivery
+              sound: 'default',
+              actionTypeId: "",
+              extra: null
+            }
+          ]
+        });
+      } else {
+        // Use web notifications
+        new Notification(title, {
+          body,
+          icon: '/favicon.ico',
+          badge: '/favicon.ico',
+          ...options,
+        });
+      }
 
       setSettings(prev => ({ ...prev, lastShown: new Date() }));
     }

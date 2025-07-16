@@ -1,0 +1,28 @@
+{
+  "appId": "app.lovable.4df7983afdfe4cddb88ac8ed85d86b17",
+  "appName": "Aim: Goals & Progress",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://4df7983a-fdfe-4cdd-b88a-c8ed85d86b17.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon_config_sample",
+      "iconColor": "#9C5CFF",
+      "sound": "beep.wav"
+    },
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#ffffff",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DEFAULT",
+      "backgroundColor": "#ffffff"
+    }
+  }
+}

@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Circle, Plus, Minus, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getTimeRemaining, formatTimeRemaining } from "@/utils/timeUtils";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { Capacitor } from "@capacitor/core";
 
 interface Goal {
   id: string;
@@ -35,14 +37,22 @@ export function GoalCard({ goal, onUpdate, onToggleComplete }: GoalCardProps) {
   const timeRemaining = getTimeRemaining(goal.periodEndDate);
   const timeRemainingText = formatTimeRemaining(timeRemaining);
 
-  const handleIncrement = () => {
+  const handleIncrement = async () => {
     if (!isCompleted) {
+      // Add haptic feedback on mobile
+      if (Capacitor.isNativePlatform()) {
+        await Haptics.impact({ style: ImpactStyle.Light });
+      }
       onUpdate(goal.id, Math.min(goal.currentValue + 1, goal.targetValue));
     }
   };
 
-  const handleDecrement = () => {
+  const handleDecrement = async () => {
     if (goal.currentValue > 0) {
+      // Add haptic feedback on mobile
+      if (Capacitor.isNativePlatform()) {
+        await Haptics.impact({ style: ImpactStyle.Light });
+      }
       onUpdate(goal.id, goal.currentValue - 1);
     }
   };
